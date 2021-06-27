@@ -26,6 +26,8 @@ namespace WRB_Chess
 		private:
 			uint64_t color_masks[2];
 			uint64_t piece_masks[6];
+			bool queensideCastle[2];
+			bool kingsideCastle[2];
 		public:
 			Bitboard();
 			inline uint64_t Pieces(Color c) { return color_masks[c]; };

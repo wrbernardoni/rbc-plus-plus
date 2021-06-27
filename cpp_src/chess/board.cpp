@@ -10,4 +10,8 @@ WRB_Chess::Bitboard::Bitboard()
 	this->piece_masks[WRB_Chess::Piece::Knight] = 0b0100001000000000000000000000000000000000000000000000000001000010;
 	this->piece_masks[WRB_Chess::Piece::Queen] = 0b0000100000000000000000000000000000000000000000000000000000001000;	
 	this->piece_masks[WRB_Chess::Piece::King] = 0b0001000000000000000000000000000000000000000000000000000000010000;
+	this->queensideCastle[WRB_Chess::Color::White] = true;
+	this->queensideCastle[WRB_Chess::Color::Black] = true;
+	this->kingsideCastle[WRB_Chess::Color::White] = true;
+	this->kingsideCastle[WRB_Chess::Color::Black] = true;
 }
