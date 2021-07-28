@@ -74,4 +74,46 @@ int main()
 
 	cout << "Original board: " << endl;
 	cout << WRB_Chess::GetPrintable(brdCpy) << endl;
+
+	int it = 1000000;
+	cout << "Let's zoom " << it << " iterations!" << endl;
+	for (int i = 0; i < it; i++)
+	{
+		WRB_Chess::Bitboard pB = brdCpy;
+		WRB_Chess::Color c = (WRB_Chess::Color)(i % 2);
+
+		vector<WRB_Chess::Move> mvs = brdCpy.AvailableMoves(c);
+		WRB_Chess::Move attemptedMove = mvs[rand() % mvs.size()];
+		bool capture = false;
+		short captureSquare = -1;
+		WRB_Chess::Move taken = brdCpy.ApplyMove(attemptedMove, capture, captureSquare);
+
+		bitset<64> auditA = (brdCpy.Pieces(WRB_Chess::Color::White) ^ brdCpy.Pieces(WRB_Chess::Color::Black));
+		bitset<64> auditB = (brdCpy.Pawns() ^ brdCpy.Bishops() ^ brdCpy.Rooks() ^ brdCpy.Knights() ^ brdCpy.Queens() ^ brdCpy.Kings());
+
+		if (auditA != auditB)
+		{
+			cout << "ERROR: Audit failed on iteration " << i << endl;
+			cout << "Attempting " << WRB_Chess::GetPrintable(attemptedMove) << endl;
+			cout << "Took: " << WRB_Chess::GetPrintable(taken) << " Capture? " << capture << " at: " << captureSquare << endl;
+			cout << WRB_Chess::GetPrintable(pB) << endl;
+			cout << "===>" << endl;
+			cout << WRB_Chess::GetPrintable(brdCpy) << endl;
+
+			bitset<64> dif = auditA ^ auditB;
+			for( int k = 0; k < 64; k++)
+			{
+				if (dif[k])
+				{
+					cout << "Difference at " << WRB_Chess::SquareNames[k] << endl;
+				}
+			}
+			break;
+		}
+	}
+
+	cout << "After " << it << " iterations:" << endl;
+	cout << WRB_Chess::GetPrintable(brdCpy) << endl;
+	cout << (brdCpy.Pieces(WRB_Chess::Color::White) ^ brdCpy.Pieces(WRB_Chess::Color::Black)) << endl;
+	cout << (brdCpy.Pawns() ^ brdCpy.Bishops() ^ brdCpy.Rooks() ^ brdCpy.Knights() ^ brdCpy.Queens() ^ brdCpy.Kings()) << endl;
 }

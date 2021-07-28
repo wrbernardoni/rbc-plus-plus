@@ -29,7 +29,7 @@ namespace WRB_Chess
 	inline const char* GetPieceName(short n) { return (n < 0 || n > 5)? "None" : PieceNames[n];};
 	inline const char* GetColorName(short n) { return (n < 0 || n > 1)? "None" : ColorNames[n];};
 
-	short RankAndFileToSquare(short rank, short file);
+	short RankAndFileToSquare(short rank, short file); // Keep in mind that rank is 1 indexed and file is 0 indexed
 	short RankAndFileToSquare(short rank, File file);
 
 	short ManhattanDistance(short sq1, short sq2);

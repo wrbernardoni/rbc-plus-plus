@@ -678,29 +678,16 @@ WRB_Chess::Move WRB_Chess::Bitboard::ApplyMove(WRB_Chess::Move m, bool& capture,
 	bool resetEP = true;
 	bool promo = false;
 
-	for (int i = 0; i < 2; i++)
-	{
-		if (this->color_masks[i][taken.toSquare])
-		{
-			this->color_masks[i][taken.toSquare] = false;
-			capture = true;
-			captureSquare = taken.toSquare;
-		}
-
-		if (this->color_masks[i][taken.fromSquare])
-		{
-			this->color_masks[i][taken.toSquare] = true;
-			this->color_masks[i][taken.fromSquare] = false;
-		}
-	}
-
 	for (int i = 0; i < 6; i++)
 	{
 		if (this->piece_masks[i][taken.toSquare])
 		{
 			this->piece_masks[i][taken.toSquare] = false;
 		}
-
+	}
+	
+	for (int i = 0; i < 6; i++)
+	{
 		if (this->piece_masks[i][taken.fromSquare])
 		{
 			// If the king or rook moves we lose castle
@@ -791,6 +778,9 @@ WRB_Chess::Move WRB_Chess::Bitboard::ApplyMove(WRB_Chess::Move m, bool& capture,
 						this->color_masks[0][this->epDefender] = false;
 					}
 
+					capture = true;
+					captureSquare = this->epDefender;
+
 
 					this->piece_masks[WRB_Chess::Piece::Pawn][this->epDefender] = false;
 				}
@@ -803,9 +793,11 @@ WRB_Chess::Move WRB_Chess::Bitboard::ApplyMove(WRB_Chess::Move m, bool& capture,
 					this->epSquare = (taken.fromSquare + taken.toSquare)/2;
 				}
 
-				if ((taken.toSquare >= 56 && this->color_masks[0][taken.fromSquare]) || (taken.toSquare <= 7 && this->color_masks[1][taken.fromSquare]))
+				if (((taken.toSquare >= 56) && this->color_masks[0][taken.fromSquare]) || ((taken.toSquare <= 7) && this->color_masks[1][taken.fromSquare]))
 				{
-					// Promotion white
+					if ((taken.promotion <= 1) || (taken.promotion > 4))
+						taken.promotion = WRB_Chess::Piece::Queen;
+
 					this->piece_masks[taken.promotion][taken.toSquare] = true;
 					this->piece_masks[i][taken.fromSquare] = false;
 					promo = true;
@@ -817,6 +809,29 @@ WRB_Chess::Move WRB_Chess::Bitboard::ApplyMove(WRB_Chess::Move m, bool& capture,
 				this->piece_masks[i][taken.toSquare] = true;
 				this->piece_masks[i][taken.fromSquare] = false;
 			}
+
+			break;
+		}
+	}
+
+	for (int i = 0; i < 2; i++)
+	{
+		if (this->color_masks[i][taken.toSquare])
+		{
+			this->color_masks[i][taken.toSquare] = false;
+			capture = true;
+			captureSquare = taken.toSquare;
+			break;
+		}
+	}
+
+	for (int i = 0; i < 2; i++)
+	{
+		if (this->color_masks[i][taken.fromSquare])
+		{
+			this->color_masks[i][taken.toSquare] = true;
+			this->color_masks[i][taken.fromSquare] = false;
+			break;
 		}
 	}
 
