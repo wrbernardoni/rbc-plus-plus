@@ -83,6 +83,23 @@ WRB_Chess::Bitboard::Bitboard()
 	this->epSquare = -1;
 }
 
+WRB_Chess::Bitboard::Bitboard(const Bitboard &bb)
+{
+	this->color_masks[WRB_Chess::Color::White] = bb.color_masks[WRB_Chess::Color::White];
+	this->color_masks[WRB_Chess::Color::Black] = bb.color_masks[WRB_Chess::Color::Black];
+	this->piece_masks[WRB_Chess::Piece::Pawn] = bb.piece_masks[WRB_Chess::Piece::Pawn];
+	this->piece_masks[WRB_Chess::Piece::Bishop] = bb.piece_masks[WRB_Chess::Piece::Bishop];
+	this->piece_masks[WRB_Chess::Piece::Rook] = bb.piece_masks[WRB_Chess::Piece::Rook];
+	this->piece_masks[WRB_Chess::Piece::Knight] = bb.piece_masks[WRB_Chess::Piece::Knight];
+	this->piece_masks[WRB_Chess::Piece::Queen] = bb.piece_masks[WRB_Chess::Piece::Queen];
+	this->piece_masks[WRB_Chess::Piece::King] = bb.piece_masks[WRB_Chess::Piece::King];
+	this->queensideCastle[WRB_Chess::Color::White] = bb.queensideCastle[WRB_Chess::Color::White];
+	this->queensideCastle[WRB_Chess::Color::Black] = bb.queensideCastle[WRB_Chess::Color::Black];
+	this->kingsideCastle[WRB_Chess::Color::White] = bb.kingsideCastle[WRB_Chess::Color::White];
+	this->kingsideCastle[WRB_Chess::Color::Black] = bb.kingsideCastle[WRB_Chess::Color::Black];
+	this->epSquare = bb.epSquare;
+}
+
 WRB_Chess::ColorPiece WRB_Chess::Bitboard::PieceAt(short square)
 {
 	ColorPiece ret;
@@ -299,15 +316,85 @@ std::vector<WRB_Chess::Move> WRB_Chess::Bitboard::AvailableMoves(WRB_Chess::Colo
 				}
 			}
 		}
+
+		if (((this->piece_masks[WRB_Chess::Piece::Bishop] | this->piece_masks[WRB_Chess::Piece::Queen]) & this->color_masks[c])[i])
+		{
+			// Generate Bishop moves
+			short stepLeft = 1;
+			short stepUp = 1;
+
+			do
+			{
+				// Generate all moves along that direction
+				short pos = i;
+				do
+				{
+					if ((((pos % 8) + stepLeft) < 0) || (((pos % 8) + stepLeft) > 7))
+					{
+						break;
+					}
+					else if ((((pos / 8) + stepUp) < 0) || (((pos / 8) + stepUp) > 7))
+					{
+						break;
+					}
+					pos = pos + stepLeft + 8 * stepUp;
+					if (this->color_masks[c][pos])
+						break;
+
+					WRB_Chess::Move slide;
+					slide.fromSquare = i;
+					slide.toSquare = pos;
+					mvs.push_back(slide);
+				}while (!this->color_masks[c][pos]);
+
+
+				short t = stepLeft;
+				stepLeft = stepUp;
+				stepUp = -t;
+			} while ((stepLeft != 1) || (stepUp != 1));
+		}
+		
+		if (((this->piece_masks[WRB_Chess::Piece::Rook] | this->piece_masks[WRB_Chess::Piece::Queen]) & this->color_masks[c])[i])
+		{
+			// Generate Rook moves
+			short stepLeft = 0;
+			short stepUp = 1;
+
+			do
+			{
+				// Generate all moves along that direction
+				short pos = i;
+				do
+				{
+					if ((((pos % 8) + stepLeft) < 0) || (((pos % 8) + stepLeft) > 7))
+					{
+						break;
+					}
+					else if ((((pos / 8) + stepUp) < 0) || (((pos / 8) + stepUp) > 7))
+					{
+						break;
+					}
+					pos = pos + stepLeft + 8 * stepUp;
+					if (this->color_masks[c][pos])
+						break;
+
+					WRB_Chess::Move slide;
+					slide.fromSquare = i;
+					slide.toSquare = pos;
+					mvs.push_back(slide);
+				}while (!this->color_masks[c][pos]);
+
+
+				short t = stepLeft;
+				stepLeft = stepUp;
+				stepUp = -t;
+			} while ((stepLeft != 0) || (stepUp != 1));
+		}
+
 	}
-
-	//Generate Bishop moves
-
-	//Generate Rook moves
 
 	//Generate Knight moves
 
-	//Generate Queen moves
 
 	//Generate King moves
 
@@ -340,6 +427,7 @@ WRB_Chess::Move WRB_Chess::Bitboard::RectifySlide(WRB_Chess::Move m, bool canCap
 				newM.fromSquare = m.fromSquare;
 				newM.toSquare = pScan;
 				newM.promotion = m.promotion;
+				return newM;
 			}
 			else if (pAt.color != pMove.color)
 			{
@@ -347,6 +435,7 @@ WRB_Chess::Move WRB_Chess::Bitboard::RectifySlide(WRB_Chess::Move m, bool canCap
 				newM.fromSquare = m.fromSquare;
 				newM.toSquare = scan;
 				newM.promotion = m.promotion;
+				return newM;
 			}
 		}
 	}
@@ -395,8 +484,96 @@ WRB_Chess::Move WRB_Chess::Bitboard::RectifyMove(WRB_Chess::Move m)
 			return Move();
 		}
 	}
+	else if (pMove.piece != WRB_Chess::Piece::Knight)
+	{
+		return this->RectifySlide(m, true);
+	}
 
 	return m;
+}
+
+WRB_Chess::Move WRB_Chess::Bitboard::ApplyMove(WRB_Chess::Move m, bool& capture, short& captureSquare)
+{
+	// TODO: Add castling, en-passant, promotion
+	WRB_Chess::Move taken = this->RectifyMove(m);
+	capture = false;
+	captureSquare = -1;
+
+	if (taken.fromSquare == -1 || taken.toSquare == 1)
+	{	
+		// Null move
+		return taken;
+	}
+
+	std::bitset<64> mvMask;
+	mvMask[taken.fromSquare] = true;
+	mvMask[taken.toSquare] = true;
+
+	for (int i = 0; i < 2; i++)
+	{
+		if (this->color_masks[i][taken.toSquare])
+		{
+			this->color_masks[i][taken.toSquare] = false;
+			capture = true;
+			captureSquare = taken.toSquare;
+		}
+
+		if (this->color_masks[i][taken.fromSquare])
+		{
+			this->color_masks[i][taken.toSquare] = true;
+			this->color_masks[i][taken.fromSquare] = false;
+		}
+	}
+
+	for (int i = 0; i < 6; i++)
+	{
+		if (this->piece_masks[i][taken.toSquare])
+		{
+			this->piece_masks[i][taken.toSquare] = false;
+		}
+
+		if (this->piece_masks[i][taken.fromSquare])
+		{
+			// If the king or rook moves we lose castle
+			if (i == WRB_Chess::Piece::King)
+			{
+				if (this->color_masks[0][taken.fromSquare])
+				{
+					this->queensideCastle[0] = false;
+					this->kingsideCastle[0] = false;
+				}
+				else if (this->color_masks[1][taken.fromSquare])
+				{
+					this->queensideCastle[1] = false;
+					this->kingsideCastle[1] = false;
+				}
+			}
+			else if (i == WRB_Chess::Piece::Rook)
+			{
+				if (taken.fromSquare == 0)
+				{
+					this->queensideCastle[0] = false;
+				}
+				else if (taken.fromSquare == 7)
+				{
+					this->kingsideCastle[0] = false;
+				}
+				else if (taken.fromSquare == (7 * 8))
+				{
+					this->queensideCastle[1] = false;
+				}
+				else if (taken.fromSquare == (7 * 8 + 7))
+				{
+					this->kingsideCastle[1] = false;
+				}
+			}
+
+			this->piece_masks[i][taken.toSquare] = true;
+			this->piece_masks[i][taken.fromSquare] = false;
+		}
+	}
+
+	return taken;
 }
 
 std::string WRB_Chess::GetPrintable(WRB_Chess::Bitboard brd)

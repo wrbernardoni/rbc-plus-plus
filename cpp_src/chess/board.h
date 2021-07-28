@@ -81,6 +81,7 @@ namespace WRB_Chess
 			Move RectifySlide(Move m, bool canCapture);
 		public:
 			Bitboard();
+			Bitboard(const Bitboard &bb); // Copy constructor
 			inline std::bitset<64> Pieces(Color c) { return color_masks[c]; };
 			inline std::bitset<64> Pieces(Color c, Piece p) { return color_masks[c] & piece_masks[p];};
 			inline std::bitset<64> Pieces(ColorPiece p) { return color_masks[p.color] & piece_masks[p.piece];};
@@ -96,6 +97,7 @@ namespace WRB_Chess
 
 			std::vector<Move> AvailableMoves(Color c);
 			Move RectifyMove(Move m);
+			Move ApplyMove(Move m, bool& capture, short& captureSquare);
 	};
 
 	std::string GetPrintable(Bitboard);
