@@ -75,6 +75,7 @@ namespace WRB_Chess
 			std::bitset<64> color_masks[2];
 			std::bitset<64> piece_masks[6];
 			short epSquare;
+			short epDefender; // Square that the pawn vulnerable to en-passant is on
 			bool queensideCastle[2];
 			bool kingsideCastle[2];
 

@@ -81,6 +81,7 @@ WRB_Chess::Bitboard::Bitboard()
 	this->kingsideCastle[WRB_Chess::Color::White] = true;
 	this->kingsideCastle[WRB_Chess::Color::Black] = true;
 	this->epSquare = -1;
+	this->epDefender = -1;
 }
 
 WRB_Chess::Bitboard::Bitboard(const Bitboard &bb)
@@ -98,6 +99,7 @@ WRB_Chess::Bitboard::Bitboard(const Bitboard &bb)
 	this->kingsideCastle[WRB_Chess::Color::White] = bb.kingsideCastle[WRB_Chess::Color::White];
 	this->kingsideCastle[WRB_Chess::Color::Black] = bb.kingsideCastle[WRB_Chess::Color::Black];
 	this->epSquare = bb.epSquare;
+	this->epDefender = bb.epDefender;
 }
 
 WRB_Chess::ColorPiece WRB_Chess::Bitboard::PieceAt(short square)
@@ -391,12 +393,130 @@ std::vector<WRB_Chess::Move> WRB_Chess::Bitboard::AvailableMoves(WRB_Chess::Colo
 			} while ((stepLeft != 0) || (stepUp != 1));
 		}
 
+		if ((this->piece_masks[WRB_Chess::Piece::Knight] & this->color_masks[c])[i])
+		{
+			// Generate knight moves
+			short stepLeft = 2;
+			short stepUp = 1;
+
+			do
+			{
+				// TODO Reorganize this to be actually good code
+				short pos = i;
+				if ((((pos % 8) + stepLeft) < 0) || (((pos % 8) + stepLeft) > 7))
+				{
+				}
+				else if ((((pos / 8) + stepUp) < 0) || (((pos / 8) + stepUp) > 7))
+				{
+				}
+				else if (this->color_masks[c][pos + stepLeft + 8 * stepUp])
+				{
+				}
+				else
+				{
+					pos = pos + stepLeft + 8 * stepUp;
+
+					WRB_Chess::Move slide;
+					slide.fromSquare = i;
+					slide.toSquare = pos;
+					mvs.push_back(slide);
+				}
+
+
+				short t = stepLeft;
+				stepLeft = stepUp;
+				stepUp = -t;
+
+			} while ((stepLeft != 2) || (stepUp != 1));
+
+			stepLeft = 2;
+			stepUp = -1;
+			do
+			{
+				// TODO Reorganize this to be actually good code
+				short pos = i;
+				if ((((pos % 8) + stepLeft) < 0) || (((pos % 8) + stepLeft) > 7))
+				{
+				}
+				else if ((((pos / 8) + stepUp) < 0) || (((pos / 8) + stepUp) > 7))
+				{
+				}
+				else if (this->color_masks[c][pos + stepLeft + 8 * stepUp])
+				{
+				}
+				else
+				{
+					pos = pos + stepLeft + 8 * stepUp;
+
+					WRB_Chess::Move slide;
+					slide.fromSquare = i;
+					slide.toSquare = pos;
+					mvs.push_back(slide);
+				}
+
+
+				short t = stepLeft;
+				stepLeft = stepUp;
+				stepUp = -t;
+
+			} while ((stepLeft != 2) || (stepUp != -1));
+		}
+
+		if ((this->piece_masks[WRB_Chess::Piece::King] & this->color_masks[c])[i])
+		{
+			// First generate normal moves
+			for (int l = -1; l <= 1; l++)
+			{
+				for (int u = -1; u <= 1; u++)
+				{
+					if ((l == 0) && (u == 0))
+						continue;
+
+					if ((((i % 8) + l) < 0) || (((i % 8) + l) > 7))
+					{
+						continue;
+					}
+					else if ((((i / 8) + u) < 0) || (((i / 8) + u) > 7))
+					{
+						continue;
+					}
+					else if (this->color_masks[c][i + l + 8 * u])
+					{
+						continue;
+					}
+
+					WRB_Chess::Move slide;
+					slide.fromSquare = i;
+					slide.toSquare = i + l + 8 * u;
+					mvs.push_back(slide);
+				}
+			}
+			// Then generate castles
+
+			if ((this->kingsideCastle[c]) && ((i%8) == 4))
+			{
+				if (!(this->color_masks[c][i + 1] || this->color_masks[c][i+2]) && (this->color_masks[c] & this->piece_masks[WRB_Chess::Piece::Rook])[i+3])
+				{
+					WRB_Chess::Move slide;
+					slide.fromSquare = i;
+					slide.toSquare = i + 2;
+					mvs.push_back(slide);
+				}
+			}
+
+			if ((this->queensideCastle[c]) && ((i%8) == 4))
+			{
+				if (!(this->color_masks[c][i - 1] || this->color_masks[c][i-2] || this->color_masks[c][i-3]) && (this->color_masks[c] & this->piece_masks[WRB_Chess::Piece::Rook])[i-4])
+				{
+					WRB_Chess::Move slide;
+					slide.fromSquare = i;
+					slide.toSquare = i - 2;
+					mvs.push_back(slide);
+				}
+			}
+		}
+
 	}
-
-	//Generate Knight moves
-
-
-	//Generate King moves
 
 	return mvs;
 }
@@ -445,11 +565,10 @@ WRB_Chess::Move WRB_Chess::Bitboard::RectifySlide(WRB_Chess::Move m, bool canCap
 
 WRB_Chess::Move WRB_Chess::Bitboard::RectifyMove(WRB_Chess::Move m)
 {
-	//TODO
 	WRB_Chess::ColorPiece pMove = this->PieceAt(m.fromSquare);
 	if ((pMove.piece == WRB_Chess::Piece::NoPiece) || (pMove.color == WRB_Chess::Color::NoColor))
 	{
-		return m;
+		return WRB_Chess::Move();
 	}
 
 	if (pMove.piece == WRB_Chess::Piece::Pawn)
@@ -484,6 +603,54 @@ WRB_Chess::Move WRB_Chess::Bitboard::RectifyMove(WRB_Chess::Move m)
 			return Move();
 		}
 	}
+	else if (pMove.piece == WRB_Chess::Piece::King)
+	{
+		short mDist = ManhattanDistance(m.fromSquare, m.toSquare);
+		if (mDist > 2)
+		{
+			return Move();
+		}
+		if ((mDist == 1) || (((m.toSquare / 8) != (m.fromSquare / 8)) && ((m.toSquare % 8) != (m.fromSquare % 8))))
+		{
+			// Regular move
+			WRB_Chess::ColorPiece pAt = this->PieceAt(m.toSquare);
+			if ((pAt.color == pMove.color))
+			{
+				return Move();
+			}
+		}
+		else
+		{
+			// Castle
+			std::bitset<64> allPieces = this->color_masks[0]|this->color_masks[1];
+			int i = m.fromSquare;
+			if ((this->kingsideCastle[pMove.color]) && ((i%8) == 4) && (m.toSquare == (i + 2)))
+			{
+				if (!(allPieces[i + 1] || allPieces[i+2]) && (this->color_masks[pMove.color] & this->piece_masks[WRB_Chess::Piece::Rook])[i+3])
+				{
+				}
+				else
+				{
+					return Move();
+				}
+			}
+			else if ((this->queensideCastle[pMove.color]) && ((i%8) == 4) && (m.toSquare == (i - 2)))
+			{
+				if (!(allPieces[i - 1] || allPieces[i-2] || allPieces[i-3]) && (this->color_masks[pMove.color] & this->piece_masks[WRB_Chess::Piece::Rook])[i-4])
+				{
+				}
+				else
+				{
+					return Move();
+				}
+			}
+			else
+			{
+				return Move();
+			}
+		}
+
+	}
 	else if (pMove.piece != WRB_Chess::Piece::Knight)
 	{
 		return this->RectifySlide(m, true);
@@ -494,7 +661,6 @@ WRB_Chess::Move WRB_Chess::Bitboard::RectifyMove(WRB_Chess::Move m)
 
 WRB_Chess::Move WRB_Chess::Bitboard::ApplyMove(WRB_Chess::Move m, bool& capture, short& captureSquare)
 {
-	// TODO: Add castling, en-passant, promotion
 	WRB_Chess::Move taken = this->RectifyMove(m);
 	capture = false;
 	captureSquare = -1;
@@ -508,6 +674,9 @@ WRB_Chess::Move WRB_Chess::Bitboard::ApplyMove(WRB_Chess::Move m, bool& capture,
 	std::bitset<64> mvMask;
 	mvMask[taken.fromSquare] = true;
 	mvMask[taken.toSquare] = true;
+
+	bool resetEP = true;
+	bool promo = false;
 
 	for (int i = 0; i < 2; i++)
 	{
@@ -537,6 +706,48 @@ WRB_Chess::Move WRB_Chess::Bitboard::ApplyMove(WRB_Chess::Move m, bool& capture,
 			// If the king or rook moves we lose castle
 			if (i == WRB_Chess::Piece::King)
 			{
+				//Check if we are castling first
+				if ((ManhattanDistance(taken.fromSquare, taken.toSquare) == 2) && ((taken.fromSquare/8) == (taken.toSquare/8)))
+				{
+					// We are castling
+					if ((taken.toSquare - taken.fromSquare) == 2)
+					{
+						// Kingside Castle
+						short rookSquare = (taken.fromSquare / 8) * 8 + 7;
+						if (this->color_masks[0][taken.fromSquare])
+						{
+							this->color_masks[0][rookSquare] = false;
+							this->color_masks[0][rookSquare - 2] = true;
+						}
+						else if (this->color_masks[1][taken.fromSquare])
+						{
+							this->color_masks[1][rookSquare] = false;
+							this->color_masks[1][rookSquare - 2] = true;
+						}
+
+						this->piece_masks[WRB_Chess::Piece::Rook][rookSquare] = false;
+						this->piece_masks[WRB_Chess::Piece::Rook][rookSquare - 2] = true;
+					}
+					else
+					{
+						// Queenside Castle
+						short rookSquare = (taken.fromSquare / 8) * 8;
+						if (this->color_masks[0][taken.fromSquare])
+						{
+							this->color_masks[0][rookSquare] = false;
+							this->color_masks[0][rookSquare + 3] = true;
+						}
+						else if (this->color_masks[1][taken.fromSquare])
+						{
+							this->color_masks[1][rookSquare] = false;
+							this->color_masks[1][rookSquare + 3] = true;
+						}
+
+						this->piece_masks[WRB_Chess::Piece::Rook][rookSquare] = false;
+						this->piece_masks[WRB_Chess::Piece::Rook][rookSquare + 3] = true;
+					}
+				}
+				
 				if (this->color_masks[0][taken.fromSquare])
 				{
 					this->queensideCastle[0] = false;
@@ -567,10 +778,52 @@ WRB_Chess::Move WRB_Chess::Bitboard::ApplyMove(WRB_Chess::Move m, bool& capture,
 					this->kingsideCastle[1] = false;
 				}
 			}
+			else if (i == WRB_Chess::Piece::Pawn)
+			{
+				if (taken.toSquare == this->epSquare)
+				{	// This is an en-passant
+					if (this->color_masks[0][taken.fromSquare])
+					{
+						this->color_masks[1][this->epDefender] = false;
+					}
+					else if (this->color_masks[1][taken.fromSquare])
+					{
+						this->color_masks[0][this->epDefender] = false;
+					}
 
-			this->piece_masks[i][taken.toSquare] = true;
-			this->piece_masks[i][taken.fromSquare] = false;
+
+					this->piece_masks[WRB_Chess::Piece::Pawn][this->epDefender] = false;
+				}
+
+				if (((taken.fromSquare % 8) == (taken.toSquare % 8)) && (ManhattanDistance(taken.fromSquare, taken.toSquare) == 2))
+				{
+					// Move two, so open to EP
+					resetEP = false;
+					this->epDefender = taken.toSquare;
+					this->epSquare = (taken.fromSquare + taken.toSquare)/2;
+				}
+
+				if ((taken.toSquare >= 56 && this->color_masks[0][taken.fromSquare]) || (taken.toSquare <= 7 && this->color_masks[1][taken.fromSquare]))
+				{
+					// Promotion white
+					this->piece_masks[taken.promotion][taken.toSquare] = true;
+					this->piece_masks[i][taken.fromSquare] = false;
+					promo = true;
+				}
+			}
+
+			if (!promo)
+			{
+				this->piece_masks[i][taken.toSquare] = true;
+				this->piece_masks[i][taken.fromSquare] = false;
+			}
 		}
+	}
+
+	if (resetEP)
+	{
+		this->epSquare = -1;
+		this->epDefender = -1;
 	}
 
 	return taken;
