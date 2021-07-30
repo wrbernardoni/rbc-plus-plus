@@ -685,7 +685,7 @@ WRB_Chess::Move WRB_Chess::Bitboard::ApplyMove(WRB_Chess::Move m, bool& capture,
 			this->piece_masks[i][taken.toSquare] = false;
 		}
 	}
-	
+
 	for (int i = 0; i < 6; i++)
 	{
 		if (this->piece_masks[i][taken.fromSquare])
