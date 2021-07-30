@@ -29,14 +29,14 @@ namespace WRB_Chess
 	inline const char* GetPieceName(short n) { return (n < 0 || n > 5)? "None" : PieceNames[n];};
 	inline const char* GetColorName(short n) { return (n < 0 || n > 1)? "None" : ColorNames[n];};
 
-	short RankAndFileToSquare(short rank, short file); // Keep in mind that rank is 1 indexed and file is 0 indexed
-	short RankAndFileToSquare(short rank, File file);
+	extern short RankAndFileToSquare(short rank, short file); // Keep in mind that rank is 1 indexed and file is 0 indexed
+	extern short RankAndFileToSquare(short rank, File file);
 
-	short ManhattanDistance(short sq1, short sq2);
+	extern short ManhattanDistance(short sq1, short sq2);
 
-	std::bitset<64> SquareToMask(short);
-	std::bitset<64> SquareToMask(std::vector<short>);
-	std::vector<short> MaskToSquares(std::bitset<64>);
+	extern std::bitset<64> SquareToMask(short);
+	extern std::bitset<64> SquareToMask(std::vector<short>);
+	extern std::vector<short> MaskToSquares(std::bitset<64>);
 
 	enum Color
 	{
@@ -95,14 +95,15 @@ namespace WRB_Chess
 			inline std::bitset<64> Kings() { return piece_masks[Piece::King]; };
 
 			ColorPiece PieceAt(short square);
+			std::vector<std::pair<short, WRB_Chess::ColorPiece>> sense(short square);
 
 			std::vector<Move> AvailableMoves(Color c);
 			Move RectifyMove(Move m);
 			Move ApplyMove(Move m, bool& capture, short& captureSquare);
 	};
 
-	std::string GetPrintable(Bitboard);
-	std::string GetPrintable(Move);
+	extern std::string GetPrintable(Bitboard);
+	extern std::string GetPrintable(Move);
 }
 
 #endif

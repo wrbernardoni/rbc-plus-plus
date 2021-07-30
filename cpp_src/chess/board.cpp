@@ -132,6 +132,25 @@ WRB_Chess::ColorPiece WRB_Chess::Bitboard::PieceAt(short square)
 	return ret;
 }
 
+std::vector<std::pair<short, WRB_Chess::ColorPiece>> WRB_Chess::Bitboard::sense(short square)
+{
+	std::vector<std::pair<short, WRB_Chess::ColorPiece>> vision;
+
+	for (short i = -1; i <= 1; i++)
+	{
+		for (short j = -1; j <= 1; j++)
+		{
+			short convSq = square + i + 8*j;
+			if ((convSq >= 0) && (convSq < 64))
+			{
+				vision.push_back(std::pair<short,  WRB_Chess::ColorPiece>(convSq, this->PieceAt(convSq)));
+			}
+		}
+	}
+
+	return vision;
+}
+
 std::vector<WRB_Chess::Move> WRB_Chess::Bitboard::AvailableMoves(WRB_Chess::Color c)
 {
 	//TODO
