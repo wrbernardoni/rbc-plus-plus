@@ -11,7 +11,7 @@ BuildPath :
 BoardTest : boardTest.o ChessUtilities
 	$(CC) $(CFLAGS) $(INCLUDES) -o build/boardTest build/boardTest.o build/ChessUtilities.o
 
-BotBattle : botBattle.o ChessUtilities ReconUtilities Bots
+BotBattle : botBattle.cpp ChessUtilities ReconUtilities Bots
 	$(CC) $(CFLAGS) $(INCLUDES) -o build/botBattle  botBattle.cpp build/ChessUtilities.o build/ReconUtilities.o build/Bots.o
 
 Bots : bots/* 
