@@ -1,9 +1,8 @@
 #ifndef WRB_BOT_BASECLASS
 #define WRB_BOT_BASECLASS
 
-#include "chess/board.h"
+#include "../chess/board.h"
 #include "GameHistory.h"
-#include <string>
 #include <vector>
 
 namespace WRB_Chess

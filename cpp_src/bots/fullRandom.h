@@ -1,7 +1,7 @@
 #ifndef WRB_BOT_FULLRANDOM
 #define WRB_BOT_FULLRANDOM
 
-#include "reconUtils/BotBase.h"
+#include "../reconUtils/BotBase.h"
 
 namespace WRB_Bot
 {
