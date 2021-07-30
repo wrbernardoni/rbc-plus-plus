@@ -576,7 +576,6 @@ WRB_Chess::Move WRB_Chess::Bitboard::RectifyMove(WRB_Chess::Move m)
 		short mDist = ManhattanDistance(m.fromSquare, m.toSquare);
 		if (mDist == 1)
 		{
-			WRB_Chess::ColorPiece pAt = this->PieceAt(m.toSquare);
 			if (this->PieceAt(m.toSquare).color != WRB_Chess::Color::NoColor)
 				return Move();
 		}
