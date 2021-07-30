@@ -3,25 +3,31 @@ CFLAGS  = -o3 --std=c++11
 
 INCLUDES = -I. -Ichess -IreconUtils -Ibots
 
-all: BoardTest Bots
+all: BuildPath BoardTest BotBattle
+
+BuildPath : 
+	mkdir -p build
 
 BoardTest : boardTest.o ChessUtilities
 	$(CC) $(CFLAGS) $(INCLUDES) -o build/boardTest build/boardTest.o build/ChessUtilities.o
 
-Bots : bots/* ChessUtilities ReconUtilities
-	$(CC) $(CFLAGS) $(INCLUDES) -o build/bots.o -c bots/*.cpp build/ChessUtilities.o
+BotBattle : botBattle.o ChessUtilities ReconUtilities Bots
+	$(CC) $(CFLAGS) $(INCLUDES) -o build/botBattle  botBattle.cpp build/ChessUtilities.o build/ReconUtilities.o build/Bots.o
 
-ChessUtilities : chess/board.h board.o
+Bots : bots/* 
+	$(CC) $(CFLAGS) $(INCLUDES) -o build/Bots.o -c bots/*.cpp
 
-ReconUtilities : reconUtils/BotBase.h reconUtils/GameHistory.h
+ChessUtilities : BuildPath chess/*
+	$(CC) $(CFLAGS) $(INCLUDES) -o build/ChessUtilities.o -c chess/*.cpp
+
+ReconUtilities : BuildPath reconUtils/*
+	$(CC) $(CFLAGS) $(INCLUDES) -o build/ReconUtilities.o -c reconUtils/*.cpp
 
 boardTest.o: boardTest.cpp ChessUtilities
 	$(CC) $(CFLAGS) $(INCLUDES) -o build/boardTest.o -c boardTest.cpp
 
 
-board.o : chess/board.h
-	$(CC) $(CFLAGS) $(INCLUDES) -o build/ChessUtilities.o -c ./chess/board.cpp
 
 clean:
-	rm -f build/*
+	rm -r -f build/*
 
