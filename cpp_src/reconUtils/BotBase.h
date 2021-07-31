@@ -5,6 +5,8 @@
 #include "GameHistory.h"
 #include <vector>
 
+extern WRB_Chess::Bitboard trueBoard;
+
 namespace WRB_Chess
 {
 	class BotBase

@@ -13,6 +13,7 @@ namespace WRB_Bot
 	private:
 		WRB_Chess::BoardManager boards;
 		WRB_Chess::Color c;
+		unsigned int turnCount;
 	public:
 		void handle_game_start(WRB_Chess::Color color, WRB_Chess::Bitboard board, std::string opponent_name);
 		void handle_opponent_move_result(bool pieceCaptured, int square);

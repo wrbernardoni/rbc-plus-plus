@@ -9,11 +9,16 @@ namespace WRB_Chess
 	class BoardManager
 	{
 	private:
-		std::unordered_set<WRB_Chess::Bitboard, WRB_Chess::BoardHash> boards;
+		WRB_Chess::Color c;
 	public:
+		std::unordered_set<WRB_Chess::Bitboard, WRB_Chess::BoardHash> boards;
+		
 		BoardManager();
 
 		void Initialize(WRB_Chess::Color c, WRB_Chess::Bitboard b);
+		void OpponentMove(short captureSquare);
+		void SenseResult(std::vector<std::pair<short, WRB_Chess::ColorPiece>>);
+		void TakenMove(WRB_Chess::Move requested_move, WRB_Chess::Move taken_move, short capture_square);
 
 		inline unsigned int size() { return boards.size(); };
 	};

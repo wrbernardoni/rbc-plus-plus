@@ -9,14 +9,14 @@ using namespace std;
 int main()
 {
 	WRB_Chess::BoardHash::Init();
-	
+
 	WRB_Chess::LocalGame game(900.0);
 	WRB_Bot::Inference whiteBot;
 	WRB_Bot::Inference blackBot;
 
 	cout << "Beginning bot match. 900 seconds per bot." << endl;
 	whiteBot.handle_game_start(WRB_Chess::Color::White, WRB_Chess::Bitboard(), "");
-	blackBot.handle_game_start(WRB_Chess::Color::White, WRB_Chess::Bitboard(), "");
+	blackBot.handle_game_start(WRB_Chess::Color::Black, WRB_Chess::Bitboard(), "");
 	game.start();
 
 	WRB_Chess::BotBase* bots[2];

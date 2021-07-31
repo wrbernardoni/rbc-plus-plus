@@ -63,12 +63,22 @@ namespace WRB_Chess
 		short fromSquare = -1;
 		short toSquare = -1;
 		Piece promotion = WRB_Chess::Piece::Queen;
+		bool operator==(const Move& rhs) const
+		{
+			return (this->fromSquare == rhs.fromSquare) && (this->toSquare == rhs.toSquare) && (this->promotion == rhs.promotion);
+		}
+		inline bool operator!=(const Move& rhs) const { return !(*this == rhs); }
 	};
 
 	struct ColorPiece
 	{
 		Piece piece = WRB_Chess::Piece::NoPiece;
 		Color color = WRB_Chess::Color::NoColor;
+		bool operator==(const ColorPiece& rhs) const
+		{
+			return (this->piece == rhs.piece) && (this->color == rhs.color);
+		}
+		inline bool operator!=(const ColorPiece& rhs) const { return !(*this == rhs); }
 	};
 
 	class Bitboard
@@ -81,31 +91,35 @@ namespace WRB_Chess
 			bool queensideCastle[2];
 			bool kingsideCastle[2];
 
-			Move RectifySlide(Move m, bool canCapture);
+			Move RectifySlide(Move m, bool canCapture) const;
 		public:
 			Bitboard();
 			Bitboard(const Bitboard &bb); // Copy constructor
 			Bitboard& operator=(const Bitboard& other);
 			bool operator==(const Bitboard& rhs) const;
 			inline bool operator!=(const Bitboard& rhs) const { return !(*this == rhs); }
+			void clear();
 
 
-			inline std::bitset<64> Pieces(Color c) { return color_masks[c]; };
-			inline std::bitset<64> Pieces(Color c, Piece p) { return color_masks[c] & piece_masks[p];};
-			inline std::bitset<64> Pieces(ColorPiece p) { return color_masks[p.color] & piece_masks[p.piece];};
-			inline std::bitset<64> Pieces() { return color_masks[Color::White] | color_masks[Color::Black]; };
-			inline std::bitset<64> Pawns() { return piece_masks[Piece::Pawn]; };
-			inline std::bitset<64> Bishops() { return piece_masks[Piece::Bishop]; };
-			inline std::bitset<64> Rooks() { return piece_masks[Piece::Rook]; };
-			inline std::bitset<64> Knights() { return piece_masks[Piece::Knight]; };
-			inline std::bitset<64> Queens() { return piece_masks[Piece::Queen]; };
-			inline std::bitset<64> Kings() { return piece_masks[Piece::King]; };
+			inline std::bitset<64> Pieces(Color c) const { return color_masks[c]; };
+			inline std::bitset<64> Pieces(Color c, Piece p) const { return color_masks[c] & piece_masks[p];};
+			inline std::bitset<64> Pieces(ColorPiece p) const { return color_masks[p.color] & piece_masks[p.piece];};
+			inline std::bitset<64> Pieces() const { return color_masks[Color::White] | color_masks[Color::Black]; };
+			inline std::bitset<64> Pawns() const { return piece_masks[Piece::Pawn]; };
+			inline std::bitset<64> Bishops() const { return piece_masks[Piece::Bishop]; };
+			inline std::bitset<64> Rooks() const { return piece_masks[Piece::Rook]; };
+			inline std::bitset<64> Knights() const { return piece_masks[Piece::Knight]; };
+			inline std::bitset<64> Queens() const { return piece_masks[Piece::Queen]; };
+			inline std::bitset<64> Kings() const { return piece_masks[Piece::King]; };
 
-			ColorPiece PieceAt(short square);
-			std::vector<std::pair<short, WRB_Chess::ColorPiece>> sense(short square);
+			inline bool KingsAlive() const { return ((piece_masks[Piece::King] & color_masks[Color::White]) != 0) && ((piece_masks[Piece::King] & color_masks[Color::Black]) != 0); };
 
-			std::vector<Move> AvailableMoves(Color c);
-			Move RectifyMove(Move m);
+			ColorPiece PieceAt(short square) const;
+			std::vector<std::pair<short, WRB_Chess::ColorPiece>> sense(short square) const;
+			Bitboard senseMask(short square) const;
+
+			std::vector<Move> AvailableMoves(Color c) const;
+			Move RectifyMove(Move m) const;
 			Move ApplyMove(Move m, bool& capture, short& captureSquare);
 
 			friend class BoardHash;
@@ -115,7 +129,7 @@ namespace WRB_Chess
 	class BoardHash
 	{
 	public:
-		static int hashKey[64][12];
+		static std::size_t hashKey[64][12];
 
 		static void Init()
 		{

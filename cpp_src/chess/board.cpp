@@ -14,7 +14,7 @@ const char* WRB_Chess::SquareNames[] = {"A1", "B1", "C1", "D1", "E1", "F1", "G1"
 const char* WRB_Chess::PieceNames[] = {"Pawn", "Bishop", "Rook", "Knight", "Queen", "King"};
 const char* WRB_Chess::ColorNames[] = {"White", "Black"};
 
-int WRB_Chess::BoardHash::hashKey[64][12];
+std::size_t WRB_Chess::BoardHash::hashKey[64][12];
 
 short WRB_Chess::RankAndFileToSquare(short rank, short file)
 {
@@ -84,6 +84,24 @@ WRB_Chess::Bitboard::Bitboard()
 	this->epDefender = -1;
 }
 
+void WRB_Chess::Bitboard::clear()
+{
+	this->color_masks[WRB_Chess::Color::White] = 0;
+	this->color_masks[WRB_Chess::Color::Black] = 0;
+	this->piece_masks[WRB_Chess::Piece::Pawn] = 0;
+	this->piece_masks[WRB_Chess::Piece::Bishop] = 0;
+	this->piece_masks[WRB_Chess::Piece::Rook] = 0;
+	this->piece_masks[WRB_Chess::Piece::Knight] = 0;
+	this->piece_masks[WRB_Chess::Piece::Queen] = 0;	
+	this->piece_masks[WRB_Chess::Piece::King] = 0;
+	this->queensideCastle[WRB_Chess::Color::White] = false;
+	this->queensideCastle[WRB_Chess::Color::Black] = false;
+	this->kingsideCastle[WRB_Chess::Color::White] = false;
+	this->kingsideCastle[WRB_Chess::Color::Black] = false;
+	this->epSquare = -1;
+	this->epDefender = -1;
+}
+
 WRB_Chess::Bitboard::Bitboard(const Bitboard &bb)
 {
 	this->color_masks[WRB_Chess::Color::White] = bb.color_masks[WRB_Chess::Color::White];
@@ -140,7 +158,7 @@ bool WRB_Chess::Bitboard::operator==(const Bitboard& rhs) const
 		&& (this->epDefender == rhs.epDefender);
 }
 
-WRB_Chess::ColorPiece WRB_Chess::Bitboard::PieceAt(short square)
+WRB_Chess::ColorPiece WRB_Chess::Bitboard::PieceAt(short square) const
 {
 	ColorPiece ret;
 	ret.color = WRB_Chess::Color::NoColor;
@@ -170,7 +188,7 @@ WRB_Chess::ColorPiece WRB_Chess::Bitboard::PieceAt(short square)
 	return ret;
 }
 
-std::vector<std::pair<short, WRB_Chess::ColorPiece>> WRB_Chess::Bitboard::sense(short square)
+std::vector<std::pair<short, WRB_Chess::ColorPiece>> WRB_Chess::Bitboard::sense(short square) const
 {
 	std::vector<std::pair<short, WRB_Chess::ColorPiece>> vision;
 
@@ -189,7 +207,38 @@ std::vector<std::pair<short, WRB_Chess::ColorPiece>> WRB_Chess::Bitboard::sense(
 	return vision;
 }
 
-std::vector<WRB_Chess::Move> WRB_Chess::Bitboard::AvailableMoves(WRB_Chess::Color c)
+WRB_Chess::Bitboard WRB_Chess::Bitboard::senseMask(short square) const
+{
+	WRB_Chess::Bitboard masked;
+	masked.clear();
+
+	std::bitset<64> mask;
+	for (short i = -1; i <= 1; i++)
+	{
+		for (short j = -1; j <= 1; j++)
+		{
+			short convSq = square + i + 8*j;
+			if ((convSq >= 0) && (convSq < 64))
+			{
+				mask[convSq] = 1;
+			}
+		}
+	}
+
+	masked.color_masks[0] = this->color_masks[0] & mask;
+	masked.color_masks[1] = this->color_masks[1] & mask;
+
+	masked.piece_masks[0] = this->piece_masks[0] & mask;
+	masked.piece_masks[1] = this->piece_masks[1] & mask;
+	masked.piece_masks[2] = this->piece_masks[2] & mask;
+	masked.piece_masks[3] = this->piece_masks[3] & mask;
+	masked.piece_masks[4] = this->piece_masks[4] & mask;
+	masked.piece_masks[5] = this->piece_masks[5] & mask;
+
+	return masked;
+}
+
+std::vector<WRB_Chess::Move> WRB_Chess::Bitboard::AvailableMoves(WRB_Chess::Color c) const
 {
 	//TODO
 	std::vector<WRB_Chess::Move> mvs;
@@ -581,7 +630,7 @@ std::vector<WRB_Chess::Move> WRB_Chess::Bitboard::AvailableMoves(WRB_Chess::Colo
 #define SCAN_SLIDE_STEP(a) ((a) > 0 ? 1 : (a) < 0 ? -1 : 0)
 #include <iostream>
 
-WRB_Chess::Move WRB_Chess::Bitboard::RectifySlide(WRB_Chess::Move m, bool canCapture)
+WRB_Chess::Move WRB_Chess::Bitboard::RectifySlide(WRB_Chess::Move m, bool canCapture) const
 {
 	if ((m.fromSquare == -1) || (m.toSquare == -1))
 	{
@@ -620,7 +669,7 @@ WRB_Chess::Move WRB_Chess::Bitboard::RectifySlide(WRB_Chess::Move m, bool canCap
 	return m;
 }
 
-WRB_Chess::Move WRB_Chess::Bitboard::RectifyMove(WRB_Chess::Move m)
+WRB_Chess::Move WRB_Chess::Bitboard::RectifyMove(WRB_Chess::Move m) const
 {
 	WRB_Chess::ColorPiece pMove = this->PieceAt(m.fromSquare);
 	if ((pMove.piece == WRB_Chess::Piece::NoPiece) || (pMove.color == WRB_Chess::Color::NoColor))

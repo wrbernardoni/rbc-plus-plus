@@ -120,5 +120,4 @@ int main()
 	cout << (brdCpy.Pieces(WRB_Chess::Color::White) ^ brdCpy.Pieces(WRB_Chess::Color::Black)) << endl;
 	cout << (brdCpy.Pawns() ^ brdCpy.Bishops() ^ brdCpy.Rooks() ^ brdCpy.Knights() ^ brdCpy.Queens() ^ brdCpy.Kings()) << endl;
 	cout << hash(brdCpy) << endl;
-
 }
