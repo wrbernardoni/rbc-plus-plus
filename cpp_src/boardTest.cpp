@@ -9,6 +9,9 @@ using namespace std;
 
 int main()
 {
+	WRB_Chess::BoardHash hash;
+	WRB_Chess::BoardHash::Init();
+
 	WRB_Chess::Bitboard board;
 
 	cout << "Hello world!" << endl;
@@ -44,7 +47,6 @@ int main()
 
 	WRB_Chess::Bitboard brdCpy = board;
 	cout << "Board copy:" << endl;
-	cout << WRB_Chess::GetPrintable(brdCpy) << endl;
 
 	srand(time(0));
 	cout << "Taking 10 random turns!" << endl;
@@ -74,8 +76,9 @@ int main()
 
 	cout << "Original board: " << endl;
 	cout << WRB_Chess::GetPrintable(brdCpy) << endl;
+	cout << "Board Hash: " << hash(brdCpy) << endl;
 
-	int it = 1000000;
+	int it = 10000;
 	cout << "Let's zoom " << it << " iterations!" << endl;
 	for (int i = 0; i < it; i++)
 	{
@@ -116,4 +119,6 @@ int main()
 	cout << WRB_Chess::GetPrintable(brdCpy) << endl;
 	cout << (brdCpy.Pieces(WRB_Chess::Color::White) ^ brdCpy.Pieces(WRB_Chess::Color::Black)) << endl;
 	cout << (brdCpy.Pawns() ^ brdCpy.Bishops() ^ brdCpy.Rooks() ^ brdCpy.Knights() ^ brdCpy.Queens() ^ brdCpy.Kings()) << endl;
+	cout << hash(brdCpy) << endl;
+
 }

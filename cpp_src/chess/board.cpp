@@ -14,7 +14,7 @@ const char* WRB_Chess::SquareNames[] = {"A1", "B1", "C1", "D1", "E1", "F1", "G1"
 const char* WRB_Chess::PieceNames[] = {"Pawn", "Bishop", "Rook", "Knight", "Queen", "King"};
 const char* WRB_Chess::ColorNames[] = {"White", "Black"};
 
-
+int WRB_Chess::BoardHash::hashKey[64][12];
 
 short WRB_Chess::RankAndFileToSquare(short rank, short file)
 {
@@ -100,6 +100,44 @@ WRB_Chess::Bitboard::Bitboard(const Bitboard &bb)
 	this->kingsideCastle[WRB_Chess::Color::Black] = bb.kingsideCastle[WRB_Chess::Color::Black];
 	this->epSquare = bb.epSquare;
 	this->epDefender = bb.epDefender;
+}
+
+WRB_Chess::Bitboard& WRB_Chess::Bitboard::operator=(const Bitboard& bb)
+{
+	this->color_masks[WRB_Chess::Color::White] = bb.color_masks[WRB_Chess::Color::White];
+	this->color_masks[WRB_Chess::Color::Black] = bb.color_masks[WRB_Chess::Color::Black];
+	this->piece_masks[WRB_Chess::Piece::Pawn] = bb.piece_masks[WRB_Chess::Piece::Pawn];
+	this->piece_masks[WRB_Chess::Piece::Bishop] = bb.piece_masks[WRB_Chess::Piece::Bishop];
+	this->piece_masks[WRB_Chess::Piece::Rook] = bb.piece_masks[WRB_Chess::Piece::Rook];
+	this->piece_masks[WRB_Chess::Piece::Knight] = bb.piece_masks[WRB_Chess::Piece::Knight];
+	this->piece_masks[WRB_Chess::Piece::Queen] = bb.piece_masks[WRB_Chess::Piece::Queen];
+	this->piece_masks[WRB_Chess::Piece::King] = bb.piece_masks[WRB_Chess::Piece::King];
+	this->queensideCastle[WRB_Chess::Color::White] = bb.queensideCastle[WRB_Chess::Color::White];
+	this->queensideCastle[WRB_Chess::Color::Black] = bb.queensideCastle[WRB_Chess::Color::Black];
+	this->kingsideCastle[WRB_Chess::Color::White] = bb.kingsideCastle[WRB_Chess::Color::White];
+	this->kingsideCastle[WRB_Chess::Color::Black] = bb.kingsideCastle[WRB_Chess::Color::Black];
+	this->epSquare = bb.epSquare;
+	this->epDefender = bb.epDefender;
+
+	return *this;
+}
+
+bool WRB_Chess::Bitboard::operator==(const Bitboard& rhs) const
+{
+	return (this->color_masks[WRB_Chess::Color::White] == rhs.color_masks[WRB_Chess::Color::White])
+		&& (this->color_masks[WRB_Chess::Color::Black] == rhs.color_masks[WRB_Chess::Color::Black])
+		&& (this->piece_masks[WRB_Chess::Piece::Pawn] == rhs.piece_masks[WRB_Chess::Piece::Pawn])
+		&& (this->piece_masks[WRB_Chess::Piece::Bishop] == rhs.piece_masks[WRB_Chess::Piece::Bishop])
+		&& (this->piece_masks[WRB_Chess::Piece::Rook] == rhs.piece_masks[WRB_Chess::Piece::Rook])
+		&& (this->piece_masks[WRB_Chess::Piece::Knight] == rhs.piece_masks[WRB_Chess::Piece::Knight])
+		&& (this->piece_masks[WRB_Chess::Piece::Queen] == rhs.piece_masks[WRB_Chess::Piece::Queen])
+		&& (this->piece_masks[WRB_Chess::Piece::King] == rhs.piece_masks[WRB_Chess::Piece::King])
+		&& (this->queensideCastle[WRB_Chess::Color::White] == rhs.queensideCastle[WRB_Chess::Color::White])
+		&& (this->queensideCastle[WRB_Chess::Color::Black] == rhs.queensideCastle[WRB_Chess::Color::Black])
+		&& (this->kingsideCastle[WRB_Chess::Color::White] == rhs.kingsideCastle[WRB_Chess::Color::White])
+		&& (this->kingsideCastle[WRB_Chess::Color::Black] == rhs.kingsideCastle[WRB_Chess::Color::Black])
+		&& (this->epSquare == rhs.epSquare)
+		&& (this->epDefender == rhs.epDefender);
 }
 
 WRB_Chess::ColorPiece WRB_Chess::Bitboard::PieceAt(short square)

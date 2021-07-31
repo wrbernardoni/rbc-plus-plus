@@ -1,6 +1,6 @@
 #include "reconUtils/LocalGame.h"
 #include "chess/board.h"
-#include "bots/fullRandom.h"
+#include "bots/inference.h"
 
 #include <iostream>
 
@@ -8,9 +8,11 @@ using namespace std;
 
 int main()
 {
+	WRB_Chess::BoardHash::Init();
+	
 	WRB_Chess::LocalGame game(900.0);
-	WRB_Bot::FullRandom whiteBot;
-	WRB_Bot::FullRandom blackBot;
+	WRB_Bot::Inference whiteBot;
+	WRB_Bot::Inference blackBot;
 
 	cout << "Beginning bot match. 900 seconds per bot." << endl;
 	whiteBot.handle_game_start(WRB_Chess::Color::White, WRB_Chess::Bitboard(), "");

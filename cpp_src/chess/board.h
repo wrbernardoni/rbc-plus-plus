@@ -8,6 +8,8 @@
 
 #include <iostream>
 
+#define OPPOSITE_COLOR(c) (c == WRB_Chess::Color::White ? WRB_Chess::Color::Black : (c != WRB_Chess::Color::NoColor ? WRB_Chess::Color::White : WRB_Chess::Color::NoColor))
+
 namespace WRB_Chess
 {
 	enum File
@@ -83,6 +85,11 @@ namespace WRB_Chess
 		public:
 			Bitboard();
 			Bitboard(const Bitboard &bb); // Copy constructor
+			Bitboard& operator=(const Bitboard& other);
+			bool operator==(const Bitboard& rhs) const;
+			inline bool operator!=(const Bitboard& rhs) const { return !(*this == rhs); }
+
+
 			inline std::bitset<64> Pieces(Color c) { return color_masks[c]; };
 			inline std::bitset<64> Pieces(Color c, Piece p) { return color_masks[c] & piece_masks[p];};
 			inline std::bitset<64> Pieces(ColorPiece p) { return color_masks[p.color] & piece_masks[p.piece];};
@@ -100,6 +107,45 @@ namespace WRB_Chess
 			std::vector<Move> AvailableMoves(Color c);
 			Move RectifyMove(Move m);
 			Move ApplyMove(Move m, bool& capture, short& captureSquare);
+
+			friend class BoardHash;
+	};
+
+
+	class BoardHash
+	{
+	public:
+		static int hashKey[64][12];
+
+		static void Init()
+		{
+			for (int i = 0; i < 64; i++)
+			{
+				for (int j = 0; j < 12; j++)
+				{
+					BoardHash::hashKey[i][j] = rand();
+				}
+			}
+		}
+
+		std::size_t operator()(const Bitboard& brd) const
+		{
+			std::size_t hash = 0;
+
+			for (int i = 0; i < 2; i++)
+			{
+				for (int j = 0; j < 6; j++)
+				{
+					for (int k = 0; k < 64; k++)
+					{
+						if ((brd.color_masks[i] & brd.piece_masks[j])[k])
+							hash = hash ^ BoardHash::hashKey[k][j + 6 * i];
+					}
+				}
+			}
+
+			return hash;
+		}
 	};
 
 	extern std::string GetPrintable(Bitboard);
