@@ -17,7 +17,7 @@ namespace WRB_Chess
 
 		void Initialize(WRB_Chess::Color c, WRB_Chess::Bitboard b);
 		void OpponentMove(short captureSquare);
-		void SenseResult(std::vector<std::pair<short, WRB_Chess::ColorPiece>>);
+		void SenseResult(std::vector<std::pair<short, WRB_Chess::ColorPiece>>&);
 		void TakenMove(WRB_Chess::Move requested_move, WRB_Chess::Move taken_move, short capture_square);
 
 		inline unsigned int size() { return boards.size(); };

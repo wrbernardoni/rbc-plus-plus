@@ -55,7 +55,7 @@ void WRB_Chess::BoardManager::OpponentMove(short captureSquare)
 	boards = newBoards;
 }
 
-void WRB_Chess::BoardManager::SenseResult(std::vector<std::pair<short, WRB_Chess::ColorPiece>> sR)
+void WRB_Chess::BoardManager::SenseResult(std::vector<std::pair<short, WRB_Chess::ColorPiece>> &sR)
 {
 	std::unordered_set<WRB_Chess::Bitboard, WRB_Chess::BoardHash> newBoards;
 
