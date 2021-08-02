@@ -963,7 +963,7 @@ std::string WRB_Chess::GetPrintable(WRB_Chess::Bitboard brd)
 			switch (p.piece)
 			{
 				case WRB_Chess::NoPiece:
-					c = ' ';
+					c = '-';
 				break;
 
 				case WRB_Chess::Pawn:
