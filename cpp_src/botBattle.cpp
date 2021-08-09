@@ -2,6 +2,9 @@
 #include "chess/board.h"
 #include "bots/inference.h"
 
+#include "utilities/MinBoardsScanEngine.h"
+#include "utilities/UniformExpectimaxEngine.h"
+
 #include <iostream>
 
 using namespace std;
@@ -11,8 +14,10 @@ int main()
 	WRB_Chess::BoardHash::Init();
 
 	WRB_Chess::LocalGame game(900.0);
-	WRB_Bot::Inference whiteBot;
-	WRB_Bot::Inference blackBot;
+	WRB_Chess::UniformExpectimax wEngine(10);
+	WRB_Chess::UniformExpectimax bEngine(10);
+	WRB_Bot::Inference whiteBot(&wEngine);
+	WRB_Bot::Inference blackBot(&bEngine);
 
 	cout << "Beginning bot match. 900 seconds per bot." << endl;
 	whiteBot.handle_game_start(WRB_Chess::Color::White, WRB_Chess::Bitboard(), "");

@@ -3,6 +3,7 @@
 
 #include "../reconUtils/BotBase.h"
 #include "../utilities/BoardManager.h"
+#include "../utilities/EngineBase.h"
 
 #include <set>
 
@@ -11,10 +12,15 @@ namespace WRB_Bot
 	class Inference : public WRB_Chess::BotBase
 	{
 	private:
+		WRB_Chess::EngineBase* engine;
 		WRB_Chess::BoardManager boards;
 		WRB_Chess::Color c;
 		unsigned int turnCount;
+
+		std::unordered_map<WRB_Chess::Bitboard, WRB_Chess::Move, WRB_Chess::BoardHash> movePolicy;
+		WRB_Chess::Move mv;
 	public:
+		Inference(WRB_Chess::EngineBase*);
 		void handle_game_start(WRB_Chess::Color color, WRB_Chess::Bitboard board, std::string opponent_name);
 		void handle_opponent_move_result(bool pieceCaptured, int square);
 		short choose_sense(std::vector<short> sense_actions, std::vector<WRB_Chess::Move> move_actions, double seconds_left);

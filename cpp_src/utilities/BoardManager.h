@@ -20,6 +20,8 @@ namespace WRB_Chess
 		void SenseResult(std::vector<std::pair<short, WRB_Chess::ColorPiece>>&);
 		void TakenMove(WRB_Chess::Move requested_move, WRB_Chess::Move taken_move, short capture_square);
 
+		static std::unordered_set<WRB_Chess::Bitboard, WRB_Chess::BoardHash> AdvanceOpponentMove(const std::unordered_set<WRB_Chess::Bitboard, WRB_Chess::BoardHash> &brds, short capture_square, WRB_Chess::Color);
+
 		inline unsigned int size() { return boards.size(); };
 	};
 };

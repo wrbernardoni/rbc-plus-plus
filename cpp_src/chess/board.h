@@ -95,6 +95,7 @@ namespace WRB_Chess
 		public:
 			Bitboard();
 			Bitboard(const Bitboard &bb); // Copy constructor
+			Bitboard(std::vector<std::pair<short, WRB_Chess::ColorPiece>>);
 			Bitboard& operator=(const Bitboard& other);
 			bool operator==(const Bitboard& rhs) const;
 			inline bool operator!=(const Bitboard& rhs) const { return !(*this == rhs); }
@@ -121,6 +122,12 @@ namespace WRB_Chess
 			std::vector<Move> AvailableMoves(Color c) const;
 			Move RectifyMove(Move m) const;
 			Move ApplyMove(Move m, bool& capture, short& captureSquare);
+			Move ApplyMove(Move m)
+			{
+				bool cap;
+				short cS;
+				return ApplyMove(m, cap, cS);
+			};
 
 			friend class BoardHash;
 	};
@@ -157,6 +164,18 @@ namespace WRB_Chess
 					}
 				}
 			}
+
+			return hash;
+		}
+	};
+
+	class MoveHash
+	{
+	public:
+		
+		long operator()(const Move& mv) const
+		{
+			long hash = ((mv.toSquare << 8) | mv.fromSquare) | (((short) mv.promotion) << 16);
 
 			return hash;
 		}

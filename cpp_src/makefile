@@ -3,6 +3,7 @@ CFLAGS  = -o3 --std=c++11
 
 INCLUDES = -I. -Ichess -IreconUtils -Ibots -Iutilities
 
+
 all: BuildPath BoardTest BotBattle
 
 BuildPath : 
@@ -39,7 +40,7 @@ ReconUtilities : BuildPath build/recon/LocalGame.o
 build/recon/%.o : reconUtils/%.cpp BuildPath
 	$(CC) $(CFLAGS) $(INCLUDES) -o $@ -c $<
 
-Utilities : BuildPath build/utilities/BoardManager.o
+Utilities : BuildPath build/utilities/BoardManager.o build/utilities/EngineBase.o build/utilities/RandomEngine.o build/utilities/MinBoardsScanEngine.o build/utilities/PureMonteEvaluator.o build/utilities/UniformExpectimaxEngine.o
 #	$(CC) $(CFLAGS) $(INCLUDES) -o build/Utilities.o -c utilities/*.cpp
 
 build/utilities/%.o : utilities/%.cpp BuildPath

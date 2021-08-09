@@ -120,6 +120,33 @@ WRB_Chess::Bitboard::Bitboard(const Bitboard &bb)
 	this->epDefender = bb.epDefender;
 }
 
+WRB_Chess::Bitboard::Bitboard(std::vector<std::pair<short, WRB_Chess::ColorPiece>> mask)
+{
+	this->color_masks[WRB_Chess::Color::White] = 0;
+	this->color_masks[WRB_Chess::Color::Black] = 0;
+	this->piece_masks[WRB_Chess::Piece::Pawn] = 0;
+	this->piece_masks[WRB_Chess::Piece::Bishop] = 0;
+	this->piece_masks[WRB_Chess::Piece::Rook] = 0;
+	this->piece_masks[WRB_Chess::Piece::Knight] = 0;
+	this->piece_masks[WRB_Chess::Piece::Queen] = 0;	
+	this->piece_masks[WRB_Chess::Piece::King] = 0;
+	this->queensideCastle[WRB_Chess::Color::White] = false;
+	this->queensideCastle[WRB_Chess::Color::Black] = false;
+	this->kingsideCastle[WRB_Chess::Color::White] = false;
+	this->kingsideCastle[WRB_Chess::Color::Black] = false;
+	this->epSquare = -1;
+	this->epDefender = -1;
+
+	for (int i = 0; i < mask.size(); i++)
+	{
+		if ((mask[i].second.color != WRB_Chess::Color::NoColor) && (mask[i].second.piece != WRB_Chess::Piece::NoPiece))
+		{
+			this->color_masks[mask[i].second.color][mask[i].first] = true;
+			this->piece_masks[mask[i].second.piece][mask[i].first] = true;
+		}
+	}
+}
+
 WRB_Chess::Bitboard& WRB_Chess::Bitboard::operator=(const Bitboard& bb)
 {
 	this->color_masks[WRB_Chess::Color::White] = bb.color_masks[WRB_Chess::Color::White];

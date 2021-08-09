@@ -13,12 +13,11 @@ void WRB_Chess::BoardManager::Initialize(WRB_Chess::Color color, WRB_Chess::Bitb
 	c = color;
 }
 
-void WRB_Chess::BoardManager::OpponentMove(short captureSquare)
+std::unordered_set<WRB_Chess::Bitboard, WRB_Chess::BoardHash> WRB_Chess::BoardManager::AdvanceOpponentMove(const std::unordered_set<WRB_Chess::Bitboard, WRB_Chess::BoardHash> &brds, short capture_square, WRB_Chess::Color c)
 {
 	std::unordered_set<WRB_Chess::Bitboard, WRB_Chess::BoardHash> newBoards;
 
-	bool trueBoardGen = false;
-	for (auto it = boards.begin(); it != boards.end(); it++)
+	for (auto it = brds.begin(); it != brds.end(); it++)
 	{
 		std::vector<WRB_Chess::Move> mvs = (*it).AvailableMoves(OPPOSITE_COLOR(c));
 		for (int i = 0; i < mvs.size(); i++)
@@ -28,31 +27,19 @@ void WRB_Chess::BoardManager::OpponentMove(short captureSquare)
 			short cS = -1;
 			b.ApplyMove(mvs[i], cap, cS);
 
-			if (b == trueBoard)
-			{
-				trueBoardGen = true;
-			}
-
-			if (cS == captureSquare && b.KingsAlive())
+			if (cS == capture_square && b.KingsAlive())
 			{
 				newBoards.emplace(b);
-			}
-			else if (b == trueBoard)
-			{
-				std::cout << "True board discarded at opponent inference" << std::endl;
-				std::cout << "TCS:" << captureSquare << " FCS:" << cS << std::endl;
-				exit(1);
 			}
 		}
 	}
 
-	if (!trueBoardGen)
-	{
-		std::cout << "True board never generated -- opponent inference" << std::endl;
-		exit(1);
-	}
+	return newBoards;
+}
 
-	boards = newBoards;
+void WRB_Chess::BoardManager::OpponentMove(short captureSquare)
+{
+	boards = WRB_Chess::BoardManager::AdvanceOpponentMove(boards, captureSquare, c);
 }
 
 void WRB_Chess::BoardManager::SenseResult(std::vector<std::pair<short, WRB_Chess::ColorPiece>> &sR)
