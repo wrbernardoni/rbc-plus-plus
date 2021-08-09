@@ -1,10 +1,19 @@
 CC = g++
 CFLAGS  = -o3 --std=c++11
 
+LDFLAGS=-lws2_32
+LDFLAGS+=-lgdi32
+LDFLAGS+=-ladvapi32
+LDFLAGS+=-lcrypt32
+LDFLAGS+=-luser32
+
+LDFLAGS+=-lssl
+LDFLAGS+=-lcrypto
+
 INCLUDES = -I. -Ichess -IreconUtils -Ibots -Iutilities
 
 
-all: BuildPath BoardTest BotBattle
+all: BuildPath BoardTest BotBattle HTTPTest
 
 BuildPath : 
 	mkdir -p build
@@ -13,41 +22,44 @@ BuildPath :
 	mkdir -p build/recon
 	mkdir -p build/chess
 
+HTTPTest : httpTest.cpp
+	$(CC) $(CFLAGS) -o build/httpTest httpTest.cpp $(INCLUDES) $(LDFLAGS) 
+
 BoardTest : boardTest.o ChessUtilities
-	$(CC) $(CFLAGS) $(INCLUDES) -o build/boardTest build/boardTest.o build/chess/*.o
+	$(CC) $(CFLAGS) -o build/boardTest build/boardTest.o build/chess/*.o $(INCLUDES) $(LDFLAGS) 
 
 BotBattle : botBattle.cpp ChessUtilities ReconUtilities Bots Utilities
-	$(CC) $(CFLAGS) $(INCLUDES) -o build/botBattle  botBattle.cpp build/chess/*.o build/recon/*.o build/bots/*.o build/utilities/*.o
+	$(CC) $(CFLAGS) -o build/botBattle  botBattle.cpp build/chess/*.o build/recon/*.o build/bots/*.o build/utilities/*.o $(INCLUDES) $(LDFLAGS)
 
 Bots : fullRandom.o inference.o
 #	$(CC) $(CFLAGS) $(INCLUDES) -o build/Bots.o -c build/bots/*.o
 
 fullRandom.o : bots/fullRandom.cpp bots/fullRandom.h
-	$(CC) $(CFLAGS) $(INCLUDES) -o build/bots/fullRandom.o -c bots/fullRandom.cpp
+	$(CC) $(CFLAGS) -o build/bots/fullRandom.o -c bots/fullRandom.cpp $(INCLUDES) $(LDFLAGS)
 
 inference.o : bots/inference.cpp bots/inference.h
-	$(CC) $(CFLAGS) $(INCLUDES) -o build/bots/inference.o -c bots/inference.cpp
+	$(CC) $(CFLAGS) -o build/bots/inference.o -c bots/inference.cpp
 
 ChessUtilities : BuildPath build/chess/board.o
 #	$(CC) $(CFLAGS) $(INCLUDES) -o build/ChessUtilities.o -c chess/*.cpp
 
 build/chess/%.o : chess/%.cpp BuildPath
-	$(CC) $(CFLAGS) $(INCLUDES) -o $@ -c $<
+	$(CC) $(CFLAGS) -o $@ -c $< $(INCLUDES) $(LDFLAGS)
 
 ReconUtilities : BuildPath build/recon/LocalGame.o
 #	$(CC) $(CFLAGS) $(INCLUDES) -o build/ReconUtilities.o -c reconUtils/*.cpp
 
 build/recon/%.o : reconUtils/%.cpp BuildPath
-	$(CC) $(CFLAGS) $(INCLUDES) -o $@ -c $<
+	$(CC) $(CFLAGS) -o $@ -c $< $(INCLUDES) $(LDFLAGS)
 
 Utilities : BuildPath build/utilities/BoardManager.o build/utilities/EngineBase.o build/utilities/RandomEngine.o build/utilities/MinBoardsScanEngine.o build/utilities/PureMonteEvaluator.o build/utilities/UniformExpectimaxEngine.o
 #	$(CC) $(CFLAGS) $(INCLUDES) -o build/Utilities.o -c utilities/*.cpp
 
 build/utilities/%.o : utilities/%.cpp BuildPath
-	$(CC) $(CFLAGS) $(INCLUDES) -o $@ -c $<
+	$(CC) $(CFLAGS) -o $@ -c $< $(INCLUDES) $(LDFLAGS)
 
 boardTest.o: boardTest.cpp ChessUtilities
-	$(CC) $(CFLAGS) $(INCLUDES) -o build/boardTest.o -c boardTest.cpp
+	$(CC) $(CFLAGS) -o build/boardTest.o -c boardTest.cpp $(INCLUDES) $(LDFLAGS)
 
 
 
