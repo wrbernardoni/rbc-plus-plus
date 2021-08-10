@@ -25,6 +25,7 @@ namespace WRB_Chess
 	};
 
 	extern const char* SquareNames[];
+	extern const char* squarenames[];
 	extern const char* PieceNames[];
 	extern const char* ColorNames[];
 
@@ -62,7 +63,7 @@ namespace WRB_Chess
 	{
 		short fromSquare = -1;
 		short toSquare = -1;
-		Piece promotion = WRB_Chess::Piece::Queen;
+		Piece promotion = WRB_Chess::Piece::NoPiece;
 		bool operator==(const Move& rhs) const
 		{
 			return (this->fromSquare == rhs.fromSquare) && (this->toSquare == rhs.toSquare) && (this->promotion == rhs.promotion);
@@ -80,6 +81,9 @@ namespace WRB_Chess
 		}
 		inline bool operator!=(const ColorPiece& rhs) const { return !(*this == rhs); }
 	};
+
+	extern Move UCI_to_move(std::string);
+	extern std::string move_to_UCI(Move);
 
 	class Bitboard
 	{

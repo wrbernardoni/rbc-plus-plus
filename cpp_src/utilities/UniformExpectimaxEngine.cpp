@@ -149,7 +149,7 @@ std::pair<short, std::unordered_map<WRB_Chess::Bitboard, WRB_Chess::Move, WRB_Ch
 		}
 	}
 	
-	std::cout << "\tExpected score from scan: " << bestES / ((double) brds.size()) << std::endl;
+	std::cout << "\t\t\tExpected score from scan: " << bestES / ((double) brds.size()) << std::endl;
 	
 	return std::pair<short, std::unordered_map<WRB_Chess::Bitboard, WRB_Chess::Move, WRB_Chess::BoardHash>>(bestSense,bestPolicy);
 }

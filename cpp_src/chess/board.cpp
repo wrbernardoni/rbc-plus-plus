@@ -11,6 +11,15 @@ const char* WRB_Chess::SquareNames[] = {"A1", "B1", "C1", "D1", "E1", "F1", "G1"
 										"A7", "B7", "C7", "D7", "E7", "F7", "G7", "H7",
 										"A8", "B8", "C8", "D8", "E8", "F8", "G8", "H8"};
 
+const char* WRB_Chess::squarenames[] = {"a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1",
+										"a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2",
+										"a3", "b3", "c3", "d3", "e3", "f3", "g3", "h3",
+										"a4", "b4", "c4", "d4", "e4", "f4", "g4", "h4",
+										"a5", "b5", "c5", "d5", "e5", "f5", "g5", "h5",
+										"a6", "b6", "c6", "d6", "e6", "f6", "g6", "h6",
+										"a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7",
+										"a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8"};
+
 const char* WRB_Chess::PieceNames[] = {"Pawn", "Bishop", "Rook", "Knight", "Queen", "King"};
 const char* WRB_Chess::ColorNames[] = {"White", "Black"};
 
@@ -63,6 +72,155 @@ std::vector<short> WRB_Chess::MaskToSquares(std::bitset<64> mask)
 	}
 
 	return out;
+}
+
+std::string WRB_Chess::move_to_UCI(WRB_Chess::Move mv)
+{
+	std::string s = "";
+	if ((mv.toSquare == -1) || (mv.fromSquare == -1))
+		return "0000";
+	s += WRB_Chess::squarenames[mv.fromSquare];
+	s += WRB_Chess::squarenames[mv.toSquare];
+
+	switch (mv.promotion)
+	{
+		case WRB_Chess::Piece::Knight:
+			s += "n";
+		break;
+
+		case WRB_Chess::Piece::Rook:
+			s += "r";
+		break;
+
+		case WRB_Chess::Piece::Bishop:
+			s += "b";
+		break;
+
+		case WRB_Chess::Piece::Queen:
+			s += "q";
+		break;
+	}
+
+	return s;
+}
+
+WRB_Chess::Move WRB_Chess::UCI_to_move(std::string s)
+{
+	if (s == "0000")
+	{
+		return WRB_Chess::Move();
+	}
+	else
+	{
+		int srank = s[1] - '0';
+		int sfile = 0;
+
+		switch(s[0])
+		{
+			case 'a':
+				sfile = 0;
+			break;
+
+			case 'b':
+				sfile = 1;
+			break;
+
+			case 'c':
+				sfile = 2;
+			break;
+
+			case 'd':
+				sfile = 3;
+			break;
+
+			case 'e':
+				sfile = 4;
+			break;
+
+			case 'f':
+				sfile = 5;
+			break;
+
+			case 'g':
+				sfile = 6;
+			break;
+
+			case 'h':
+				sfile = 7;
+			break;
+		};
+
+		int trank = s[3] - '0';
+		int tfile = 0;
+		switch(s[2])
+		{
+			case 'a':
+				tfile = 0;
+			break;
+
+			case 'b':
+				tfile = 1;
+			break;
+
+			case 'c':
+				tfile = 2;
+			break;
+
+			case 'd':
+				tfile = 3;
+			break;
+
+			case 'e':
+				tfile = 4;
+			break;
+
+			case 'f':
+				tfile = 5;
+			break;
+
+			case 'g':
+				tfile = 6;
+			break;
+
+			case 'h':
+				tfile = 7;
+			break;
+		};
+
+		WRB_Chess::Piece promo;
+		if (s.size() > 4)
+		{
+			switch(s[4])
+			{
+				case 'b':
+					promo = WRB_Chess::Piece::Bishop;
+				break;
+
+				case 'r':
+					promo = WRB_Chess::Piece::Rook;
+				break;
+
+				case 'n':
+					promo = WRB_Chess::Piece::Knight;
+				break;
+
+				case 'q':
+					promo = WRB_Chess::Piece::Queen;
+				break;
+			};
+		}
+		else
+		{
+			promo = WRB_Chess::Piece::Queen;
+		}
+
+		WRB_Chess::Move  mv;
+		mv.fromSquare = WRB_Chess::RankAndFileToSquare(srank, sfile);
+		mv.toSquare = WRB_Chess::RankAndFileToSquare(trank, tfile);
+		mv.promotion = promo;
+
+		return mv;
+	}
 }
 
 
@@ -676,7 +834,10 @@ WRB_Chess::Move WRB_Chess::Bitboard::RectifySlide(WRB_Chess::Move m, bool canCap
 		{
 			if ((!canCapture) || (pAt.color == pMove.color))
 			{
-				Move newM;
+				if (pScan == m.fromSquare)
+					return WRB_Chess::Move();
+
+				WRB_Chess::Move newM;
 				newM.fromSquare = m.fromSquare;
 				newM.toSquare = pScan;
 				newM.promotion = m.promotion;
@@ -684,7 +845,10 @@ WRB_Chess::Move WRB_Chess::Bitboard::RectifySlide(WRB_Chess::Move m, bool canCap
 			}
 			else if (pAt.color != pMove.color)
 			{
-				Move newM;
+				if (scan == m.fromSquare)
+					return WRB_Chess::Move();
+
+				WRB_Chess::Move newM;
 				newM.fromSquare = m.fromSquare;
 				newM.toSquare = scan;
 				newM.promotion = m.promotion;
@@ -797,10 +961,10 @@ WRB_Chess::Move WRB_Chess::Bitboard::ApplyMove(WRB_Chess::Move m, bool& capture,
 	capture = false;
 	captureSquare = -1;
 
-	if (taken.fromSquare == -1 || taken.toSquare == 1)
+	if (taken.fromSquare == -1 || taken.toSquare == -1 || taken.fromSquare == taken.toSquare)
 	{	
 		// Null move
-		return taken;
+		return WRB_Chess::Move();
 	}
 
 	std::bitset<64> mvMask;

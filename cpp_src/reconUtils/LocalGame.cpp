@@ -1,14 +1,11 @@
 #include "LocalGame.h"
 
-WRB_Chess::Bitboard trueBoard;
-
 WRB_Chess::LocalGame::LocalGame(double seconds_per_player)
 {
 	this->whiteSeconds = seconds_per_player;
 	this->blackSeconds = seconds_per_player;
 	currentTurn = WRB_Chess::Color::White;
 	opponentMvRes = -1;
-	trueBoard = board;
 }
 
 std::vector<short> WRB_Chess::LocalGame::sense_actions()
@@ -55,7 +52,6 @@ std::tuple<WRB_Chess::Move, WRB_Chess::Move, short> WRB_Chess::LocalGame::move(W
 	bool capture;
 	short cS;
 	WRB_Chess::Move taken = board.ApplyMove(m, capture, cS);
-	trueBoard = board;
 	opponentMvRes = cS;
 	return std::tuple<WRB_Chess::Move, WRB_Chess::Move, short>(m, taken, cS);
 }

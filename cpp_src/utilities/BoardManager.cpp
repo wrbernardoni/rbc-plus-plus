@@ -46,7 +46,6 @@ void WRB_Chess::BoardManager::SenseResult(std::vector<std::pair<short, WRB_Chess
 {
 	std::unordered_set<WRB_Chess::Bitboard, WRB_Chess::BoardHash> newBoards;
 
-	bool trueBoardGen = false;
 	for (auto it = boards.begin(); it != boards.end(); it++)
 	{
 		bool good = true;
@@ -60,25 +59,11 @@ void WRB_Chess::BoardManager::SenseResult(std::vector<std::pair<short, WRB_Chess
 			}
 		}
 
-		if ((*it) == trueBoard)
-			trueBoardGen = true;
-
 		if (good)
 		{
 			WRB_Chess::Bitboard b = (*it);
 			newBoards.emplace(b);
 		}
-		else if ((*it) == trueBoard)
-		{
-			std::cout << "True board discarded at sense" << std::endl;
-			exit(1);
-		}
-	}
-
-	if (!trueBoardGen)
-	{
-		std::cout << "True board never generated -- sense inference" << std::endl;
-		exit(1);
 	}
 
 	boards = newBoards;
@@ -88,7 +73,6 @@ void WRB_Chess::BoardManager::TakenMove(WRB_Chess::Move requested_move, WRB_Ches
 {
 	std::unordered_set<WRB_Chess::Bitboard, WRB_Chess::BoardHash> newBoards;
 
-	bool trueBoardGen = false;
 	for (auto it = boards.begin(); it != boards.end(); it++)
 	{
 		WRB_Chess::Bitboard b = (*it);
@@ -96,27 +80,10 @@ void WRB_Chess::BoardManager::TakenMove(WRB_Chess::Move requested_move, WRB_Ches
 		short cS = -1;
 		WRB_Chess::Move taken = b.ApplyMove(requested_move, cap, cS);
 
-		if (b == trueBoard)
-		{
-			trueBoardGen = true;
-		}
-
 		if ((cS == capture_square) && (taken == taken_move) && b.KingsAlive())
 		{
 			newBoards.emplace(b);
 		}
-		else if ((b == trueBoard) && (b.KingsAlive()))
-		{
-			std::cout << "True board discarded at move inference" << std::endl;
-			std::cout << "RM:" << WRB_Chess::GetPrintable(requested_move) << " TM:" << WRB_Chess::GetPrintable(taken_move) << " OM:" << WRB_Chess::GetPrintable(taken) << " ACS:" << capture_square << " OCS: " << cS << std::endl;
-			exit(1);
-		}
-	}
-
-	if (!trueBoardGen)
-	{
-		std::cout << "True board never generated -- move inference" << std::endl;
-		exit(1);
 	}
 
 	boards = newBoards;
