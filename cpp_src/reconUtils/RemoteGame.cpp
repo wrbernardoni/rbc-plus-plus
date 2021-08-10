@@ -130,17 +130,7 @@ std::vector<std::pair<short, WRB_Chess::ColorPiece>> WRB_Chess::RemoteGame::sens
 
 	std::string rt = "/api/games/" + std::to_string(gID) + "/sense";
 	if (auto res = cli->Post(rt.c_str(), senseR.dump(), "application/json")) {
-		json rep;
-		try
-		{
-			rep = json::parse(res->body);
-		}
-		catch (...)
-		{
-			std::cout << "That scanning json parse issue" << std::endl;
-			std::cout << res->body << std::endl;
-			exit(1);
-		}
+		json rep = json::parse(res->body);
 		
 		std::vector<std::pair<short, WRB_Chess::ColorPiece>> sR;
 
