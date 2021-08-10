@@ -18,7 +18,6 @@ WRB_Bot::Inference::Inference(WRB_Chess::EngineBase* e)
 
 void WRB_Bot::Inference::handle_game_start(WRB_Chess::Color color, WRB_Chess::Bitboard board, std::string opponent_name)
 {
-	srand(time(0));
 	boards.Initialize(color, board);
 	c = color;
 	turnCount = 0;
@@ -36,7 +35,7 @@ void WRB_Bot::Inference::handle_opponent_move_result(bool pieceCaptured, int squ
 
 short WRB_Bot::Inference::choose_sense(std::vector<short> sense_actions, std::vector<WRB_Chess::Move> move_actions, double seconds_left)
 {
-	auto mP = engine->RecommendScanMovePolicy(boards.boards, c);
+	auto mP = engine->RecommendScanMovePolicy(boards.infoSet, c, seconds_left);
 	movePolicy = mP.second;
 	return mP.first;
 }

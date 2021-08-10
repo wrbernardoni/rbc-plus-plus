@@ -15,13 +15,13 @@ using json = nlohmann::json;
 int main(int argc, const char* argv[])
 {	
 	// HTTPS
-	httplib::Client cli("http://httpbin.org");
+	httplib::Client cli("localhost:3000");
 	cli.set_basic_auth("user", "pass");
 	//cli.set_ca_cert_path("./ca-bundle.crt");
 	cli.enable_server_certificate_verification(false);
 	cli.set_follow_location(true);
 
-	if (auto res = cli.Post("/post", "{\"foo\": 1, \"bar\": \"baz\"}","application/json")) {
+	if (auto res = cli.Post("/", "{\"white\": \"fred\", \"black\": \"baz\", \"winner\":\"fred\"}","application/json")) {
 		std::cout << res->status << std::endl;
 		std::cout << res->get_header_value("Content-Type") << std::endl;
 		std::cout << res->body << std::endl;

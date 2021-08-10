@@ -8,7 +8,7 @@ namespace WRB_Chess
 	class MinBoardsScanEngine : public RandomEngine
 	{
 	public:
-		virtual short RecommendScan(const std::unordered_set<WRB_Chess::Bitboard, WRB_Chess::BoardHash>&, WRB_Chess::Color, double&);
+		virtual short RecommendScan(const WRB_Chess::InformationSet&, WRB_Chess::Color, double&);
 	};
 };
 

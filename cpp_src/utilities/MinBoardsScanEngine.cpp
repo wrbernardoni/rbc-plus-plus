@@ -2,7 +2,7 @@
 #include <unordered_map>
 
 
-short WRB_Chess::MinBoardsScanEngine::RecommendScan(const std::unordered_set<WRB_Chess::Bitboard, WRB_Chess::BoardHash>& brds, WRB_Chess::Color c, double& d)
+short WRB_Chess::MinBoardsScanEngine::RecommendScan(const WRB_Chess::InformationSet& brds, WRB_Chess::Color c, double& d)
 {
 	d = 0;
 	short minSense = -1;
@@ -12,7 +12,7 @@ short WRB_Chess::MinBoardsScanEngine::RecommendScan(const std::unordered_set<WRB
 		for (int i = 1; i < 7; i++)
 		{
 			std::unordered_map<WRB_Chess::Bitboard, std::unordered_set<WRB_Chess::Bitboard, WRB_Chess::BoardHash>, WRB_Chess::BoardHash> partition;
-			for (auto it = brds.begin(); it != brds.end(); it++)
+			for (auto it = brds.boards.begin(); it != brds.boards.end(); it++)
 			{
 				WRB_Chess::Bitboard masked = (*it).senseMask(i + 8*j);
 				partition[masked].emplace((*it));

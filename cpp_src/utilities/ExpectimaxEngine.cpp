@@ -1,14 +1,14 @@
-#include "UniformExpectimaxEngine.h"
+#include "ExpectimaxEngine.h"
 #include <iostream>
 #include <unordered_map>
 
-short WRB_Chess::UniformExpectimax::RecommendScan(const WRB_Chess::InformationSet& brds, WRB_Chess::Color c, double& d)
+short WRB_Chess::Expectimax::RecommendScan(const WRB_Chess::InformationSet& brds, WRB_Chess::Color c, double& d)
 {
 	d = 0;
 	return RecommendScanMovePolicy(brds, c).first;
 }
 
-WRB_Chess::Move WRB_Chess::UniformExpectimax::RecommendMove(const WRB_Chess::InformationSet& brds, WRB_Chess::Color c, double& d)
+WRB_Chess::Move WRB_Chess::Expectimax::RecommendMove(const WRB_Chess::InformationSet& brds, WRB_Chess::Color c, double& d)
 {
 	if (brds.boards.size() == 0)
 		return WRB_Chess::Move();
@@ -32,10 +32,15 @@ WRB_Chess::Move WRB_Chess::UniformExpectimax::RecommendMove(const WRB_Chess::Inf
 				scores[eBrd] = -1.0 * EvaluatePosition(eBrd, OPPOSITE_COLOR(c));
 			}
 
-			mvScore += scores[eBrd];
+			double bP = 0.0;
+			if (brds.probability.count((*iter)) > 0)
+			{
+				bP = brds.probability.at(*iter).p;
+			}
+			mvScore += scores[eBrd] * bP;
 		}
 
-		mvScore = mvScore / ((long double)brds.boards.size());
+		mvScore = mvScore;
 
 		if ((mvScore > bestScore) || (bestMove.size() == 0))
 		{
@@ -60,7 +65,7 @@ WRB_Chess::Move WRB_Chess::UniformExpectimax::RecommendMove(const WRB_Chess::Inf
 	return choice;
 }
 
-std::pair<short, std::unordered_map<WRB_Chess::Bitboard, WRB_Chess::Move, WRB_Chess::BoardHash>> WRB_Chess::UniformExpectimax::RecommendScanMovePolicy(const WRB_Chess::InformationSet& brds, WRB_Chess::Color c)
+std::pair<short, std::unordered_map<WRB_Chess::Bitboard, WRB_Chess::Move, WRB_Chess::BoardHash>> WRB_Chess::Expectimax::RecommendScanMovePolicy(const WRB_Chess::InformationSet& brds, WRB_Chess::Color c)
 {
 	scores.clear();
 
@@ -115,7 +120,15 @@ std::pair<short, std::unordered_map<WRB_Chess::Bitboard, WRB_Chess::Move, WRB_Ch
 					double lms = 0.0;
 					for (auto bd = it->second.cbegin(); bd != it->second.cend(); bd++)
 					{
-						lms += mvScore[(*bd)][mvs[k]];
+						double bP = 0.0;
+						if (brds.probability.count((*bd)) > 0)
+						{
+							bP = brds.probability.at(*bd).p;
+						}
+
+						//std::cout << bP << std::endl;
+
+						lms += mvScore[(*bd)][mvs[k]] * bP;
 					}
 
 					if ((bestMv == -1) || (lms > sc))
@@ -149,7 +162,7 @@ std::pair<short, std::unordered_map<WRB_Chess::Bitboard, WRB_Chess::Move, WRB_Ch
 		}
 	}
 	
-	std::cout << "\t\t\tExpected score from scan: " << bestES / ((double) brds.boards.size()) << std::endl;
+	std::cout << "\t\t\tExpected score from scan: " << bestES << std::endl;
 	
 	return std::pair<short, std::unordered_map<WRB_Chess::Bitboard, WRB_Chess::Move, WRB_Chess::BoardHash>>(bestSense,bestPolicy);
 }

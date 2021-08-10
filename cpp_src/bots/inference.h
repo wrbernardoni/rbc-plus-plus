@@ -1,5 +1,5 @@
-#ifndef WRB_BOT_FULLRANDOM
-#define WRB_BOT_FULLRANDOM
+#ifndef WRB_BOT_INFERENCE
+#define WRB_BOT_INFERENCE
 
 #include "../reconUtils/BotBase.h"
 #include "../utilities/BoardManager.h"
@@ -12,7 +12,6 @@ namespace WRB_Bot
 	class Inference : public WRB_Chess::BotBase
 	{
 	private:
-		WRB_Chess::EngineBase* engine;
 		WRB_Chess::BoardManager boards;
 		WRB_Chess::Color c;
 		unsigned int turnCount;
@@ -20,6 +19,7 @@ namespace WRB_Bot
 		std::unordered_map<WRB_Chess::Bitboard, WRB_Chess::Move, WRB_Chess::BoardHash> movePolicy;
 		WRB_Chess::Move mv;
 	public:
+		WRB_Chess::EngineBase* engine;
 		Inference(WRB_Chess::EngineBase*);
 		void handle_game_start(WRB_Chess::Color color, WRB_Chess::Bitboard board, std::string opponent_name);
 		void handle_opponent_move_result(bool pieceCaptured, int square);

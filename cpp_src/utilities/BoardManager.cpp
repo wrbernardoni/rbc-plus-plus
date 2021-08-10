@@ -2,6 +2,8 @@
 
 #include "../reconUtils/BotBase.h"
 
+#include <iostream>
+
 WRB_Chess::BoardManager::BoardManager()
 {
 
@@ -9,15 +11,17 @@ WRB_Chess::BoardManager::BoardManager()
 
 void WRB_Chess::BoardManager::Initialize(WRB_Chess::Color color, WRB_Chess::Bitboard b)
 {
-	boards.emplace(b);
+	infoSet.boards.emplace(b);
+	infoSet.probability[b].p = 1;
 	c = color;
 }
 
-std::unordered_set<WRB_Chess::Bitboard, WRB_Chess::BoardHash> WRB_Chess::BoardManager::AdvanceOpponentMove(const std::unordered_set<WRB_Chess::Bitboard, WRB_Chess::BoardHash> &brds, short capture_square, WRB_Chess::Color c)
+WRB_Chess::InformationSet WRB_Chess::BoardManager::AdvanceOpponentMove(const WRB_Chess::InformationSet &brds, short capture_square, WRB_Chess::Color c)
 {
-	std::unordered_set<WRB_Chess::Bitboard, WRB_Chess::BoardHash> newBoards;
+	WRB_Chess::InformationSet iS;
+	double totalMass = 0.0;
 
-	for (auto it = brds.begin(); it != brds.end(); it++)
+	for (auto it = brds.boards.begin(); it != brds.boards.end(); it++)
 	{
 		std::vector<WRB_Chess::Move> mvs = (*it).AvailableMoves(OPPOSITE_COLOR(c));
 		for (int i = 0; i < mvs.size(); i++)
@@ -29,24 +33,43 @@ std::unordered_set<WRB_Chess::Bitboard, WRB_Chess::BoardHash> WRB_Chess::BoardMa
 
 			if (cS == capture_square && b.KingsAlive())
 			{
-				newBoards.emplace(b);
+				iS.boards.emplace(b);
+				if (brds.probability.count((*it)) > 0)
+				{
+					iS.probability[b].p += brds.probability.at((*it)).p / mvs.size();
+					totalMass += brds.probability.at((*it)).p / mvs.size();
+				}
+				else
+				{
+					//std::cout << "bprob missing" << std::endl;
+				}
 			}
 		}
 	}
 
-	return newBoards;
+	if (totalMass != 0)
+	{
+		for (auto it = iS.boards.begin(); it != iS.boards.end(); it++)
+		{
+			iS.probability[(*it)].p = iS.probability[(*it)].p / (totalMass);
+			//std::cout << "@AOM " << iS.probability[(*it)].p << std::endl;
+		}
+	}
+
+	return iS;
 }
 
 void WRB_Chess::BoardManager::OpponentMove(short captureSquare)
 {
-	boards = WRB_Chess::BoardManager::AdvanceOpponentMove(boards, captureSquare, c);
+	infoSet = WRB_Chess::BoardManager::AdvanceOpponentMove(infoSet, captureSquare, c);
 }
 
 void WRB_Chess::BoardManager::SenseResult(std::vector<std::pair<short, WRB_Chess::ColorPiece>> &sR)
 {
-	std::unordered_set<WRB_Chess::Bitboard, WRB_Chess::BoardHash> newBoards;
+	InformationSet iS;
+	double totalMass = 0.0;
 
-	for (auto it = boards.begin(); it != boards.end(); it++)
+	for (auto it = infoSet.boards.begin(); it != infoSet.boards.end(); it++)
 	{
 		bool good = true;
 		for (int i = 0; i < sR.size(); i++)
@@ -62,18 +85,30 @@ void WRB_Chess::BoardManager::SenseResult(std::vector<std::pair<short, WRB_Chess
 		if (good)
 		{
 			WRB_Chess::Bitboard b = (*it);
-			newBoards.emplace(b);
+			iS.boards.emplace(b);
+			iS.probability[b].p = infoSet.probability[b].p;
+			totalMass += infoSet.probability[b].p;
 		}
 	}
 
-	boards = newBoards;
+	if (totalMass != 0)
+	{
+		for (auto it = iS.boards.begin(); it != iS.boards.end(); it++)
+		{
+			iS.probability[(*it)].p = iS.probability[(*it)].p / (totalMass);
+			//std::cout << "@SR " << iS.probability[(*it)].p << std::endl;
+		}
+	}
+	
+	infoSet = iS;
 }
 
 void WRB_Chess::BoardManager::TakenMove(WRB_Chess::Move requested_move, WRB_Chess::Move taken_move, short capture_square)
 {
-	std::unordered_set<WRB_Chess::Bitboard, WRB_Chess::BoardHash> newBoards;
+	InformationSet iS;
+	double totalMass = 0.0;
 
-	for (auto it = boards.begin(); it != boards.end(); it++)
+	for (auto it = infoSet.boards.begin(); it != infoSet.boards.end(); it++)
 	{
 		WRB_Chess::Bitboard b = (*it);
 		bool cap = false;
@@ -82,9 +117,20 @@ void WRB_Chess::BoardManager::TakenMove(WRB_Chess::Move requested_move, WRB_Ches
 
 		if ((cS == capture_square) && (taken == taken_move) && b.KingsAlive())
 		{
-			newBoards.emplace(b);
+			iS.boards.emplace(b);
+			iS.probability[b].p = infoSet.probability[*it].p;
+			totalMass += infoSet.probability[*it].p;
 		}
 	}
 
-	boards = newBoards;
+	if (totalMass != 0)
+	{
+		for (auto it = iS.boards.begin(); it != iS.boards.end(); it++)
+		{
+			iS.probability[(*it)].p = iS.probability[(*it)].p / (totalMass);
+			//std::cout << "@TM " << iS.probability[(*it)].p << std::endl;
+		}
+	}
+
+	infoSet = iS;
 }

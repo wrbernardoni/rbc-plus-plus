@@ -10,8 +10,8 @@ namespace WRB_Chess
 	public:
 		RandomEngine();
 		virtual double EvaluatePosition(const WRB_Chess::Bitboard&, WRB_Chess::Color);
-		virtual short RecommendScan(const std::unordered_set<WRB_Chess::Bitboard, WRB_Chess::BoardHash>&, WRB_Chess::Color, double&);
-		virtual WRB_Chess::Move RecommendMove(const std::unordered_set<WRB_Chess::Bitboard, WRB_Chess::BoardHash>&, WRB_Chess::Color, double&);
+		virtual short RecommendScan(const WRB_Chess::InformationSet&, WRB_Chess::Color, double&);
+		virtual WRB_Chess::Move RecommendMove(const WRB_Chess::InformationSet&, WRB_Chess::Color, double&);
 	};
 };
 

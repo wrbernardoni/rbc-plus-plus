@@ -120,3 +120,4 @@ dist
 .yarn/install-state.gz
 .pnp.*
 tournament_server/package-lock.json
+tournament_server/elo.json

@@ -13,7 +13,7 @@ LDFLAGS+=-lcrypto
 INCLUDES = -I. -Ichess -IreconUtils -Ibots -Iutilities
 
 
-all: BuildPath BoardTest BotBattle HTTPTest Connect
+all: BuildPath BoardTest BotBattle HTTPTest Connect LocalTournament
 
 BuildPath : 
 	mkdir -p build
@@ -24,6 +24,9 @@ BuildPath :
 
 HTTPTest : httpTest.cpp
 	$(CC) $(CFLAGS) -o build/httpTest httpTest.cpp $(INCLUDES) $(LDFLAGS) 
+
+LocalTournament : localTournament.cpp ChessUtilities ReconUtilities Bots Utilities
+	$(CC) $(CFLAGS) -o build/localTournament localTournament.cpp build/chess/*.o build/recon/*.o build/bots/*.o build/utilities/*.o $(INCLUDES) $(LDFLAGS) 
 
 Connect : connectToServer.cpp ChessUtilities ReconUtilities Bots Utilities
 	$(CC) $(CFLAGS) -o build/connect connectToServer.cpp build/chess/*.o build/recon/*.o build/bots/*.o build/utilities/*.o $(INCLUDES) $(LDFLAGS) 
@@ -55,7 +58,7 @@ ReconUtilities : BuildPath build/recon/LocalGame.o build/recon/RemoteGame.o
 build/recon/%.o : reconUtils/%.cpp BuildPath
 	$(CC) $(CFLAGS) -o $@ -c $< $(INCLUDES) $(LDFLAGS)
 
-Utilities : BuildPath build/utilities/BoardManager.o build/utilities/EngineBase.o build/utilities/RandomEngine.o build/utilities/MinBoardsScanEngine.o build/utilities/PureMonteEvaluator.o build/utilities/UniformExpectimaxEngine.o
+Utilities : BuildPath build/utilities/BoardManager.o build/utilities/EngineBase.o build/utilities/RandomEngine.o build/utilities/MinBoardsScanEngine.o build/utilities/PureMonteEvaluator.o build/utilities/UniformExpectimaxEngine.o build/utilities/ExpectimaxEngine.o
 #	$(CC) $(CFLAGS) $(INCLUDES) -o build/Utilities.o -c utilities/*.cpp
 
 build/utilities/%.o : utilities/%.cpp BuildPath

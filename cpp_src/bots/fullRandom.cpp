@@ -5,7 +5,6 @@
 
 void WRB_Bot::FullRandom::handle_game_start(WRB_Chess::Color color, WRB_Chess::Bitboard board, std::string opponent_name)
 {
-	srand(time(0));
 }
 
 short WRB_Bot::FullRandom::choose_sense(std::vector<short> sense_actions, std::vector<WRB_Chess::Move> move_actions, double seconds_left)

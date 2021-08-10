@@ -3,15 +3,35 @@
 
 #include "../chess/board.h"
 #include <unordered_set>
+#include <unordered_map>
 
 namespace WRB_Chess
 {
+
+	struct DoubleDefaulted
+	{
+		double p = 0;
+	};
+
+	struct InformationSet
+	{
+		std::unordered_set<WRB_Chess::Bitboard, WRB_Chess::BoardHash> boards;
+		std::unordered_map<WRB_Chess::Bitboard, DoubleDefaulted, WRB_Chess::BoardHash> probability;
+
+		InformationSet& operator= (const InformationSet& other)
+		{
+			this->boards = other.boards;
+			this->probability = other.probability;
+			return *this;
+		};
+	};
+
 	class BoardManager
 	{
 	private:
 		WRB_Chess::Color c;
 	public:
-		std::unordered_set<WRB_Chess::Bitboard, WRB_Chess::BoardHash> boards;
+		InformationSet infoSet;
 		
 		BoardManager();
 
@@ -20,9 +40,9 @@ namespace WRB_Chess
 		void SenseResult(std::vector<std::pair<short, WRB_Chess::ColorPiece>>&);
 		void TakenMove(WRB_Chess::Move requested_move, WRB_Chess::Move taken_move, short capture_square);
 
-		static std::unordered_set<WRB_Chess::Bitboard, WRB_Chess::BoardHash> AdvanceOpponentMove(const std::unordered_set<WRB_Chess::Bitboard, WRB_Chess::BoardHash> &brds, short capture_square, WRB_Chess::Color);
+		static InformationSet AdvanceOpponentMove(const InformationSet &brds, short capture_square, WRB_Chess::Color);
 
-		inline unsigned int size() { return boards.size(); };
+		inline unsigned int size() { return infoSet.boards.size(); };
 	};
 };
 

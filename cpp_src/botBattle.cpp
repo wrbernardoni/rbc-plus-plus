@@ -3,7 +3,7 @@
 #include "bots/inference.h"
 
 #include "utilities/MinBoardsScanEngine.h"
-#include "utilities/UniformExpectimaxEngine.h"
+#include "utilities/ExpectimaxEngine.h"
 
 #include <iostream>
 
@@ -14,8 +14,8 @@ int main()
 	WRB_Chess::BoardHash::Init();
 
 	WRB_Chess::LocalGame game(900.0);
-	WRB_Chess::UniformExpectimax wEngine(10);
-	WRB_Chess::UniformExpectimax bEngine(10);
+	WRB_Chess::Expectimax wEngine(10);
+	WRB_Chess::Expectimax bEngine(10);
 	WRB_Bot::Inference whiteBot(&wEngine);
 	WRB_Bot::Inference blackBot(&bEngine);
 

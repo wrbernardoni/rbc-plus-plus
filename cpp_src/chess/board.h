@@ -5,6 +5,7 @@
 #include <vector>
 #include <bitset>
 #include <string>
+#include <ctime>
 
 #include <iostream>
 
@@ -144,6 +145,8 @@ namespace WRB_Chess
 
 		static void Init()
 		{
+			srand(time(0));
+
 			for (int i = 0; i < 64; i++)
 			{
 				for (int j = 0; j < 12; j++)
