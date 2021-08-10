@@ -155,11 +155,16 @@ struct InviteThread
 
 int main(int argc, char* argv[])
 {
+	if (argc < 3)
+	{
+		cout << "At least 3 arguments needed: call it like: connect user pass" << endl;
+		return 1;
+	}
 	WRB_Chess::BoardHash::Init();
 	// TODO Make these cmd line args
 	std::string server_url = "https://rbc.jhuapl.edu";
-	std::string user = "user";
-	std::string pass = "pass";
+	std::string user = argv[1];
+	std::string pass = argv[2];
 	int concurrent_games = 4;
 	bool ranked = true;
 	bool newVersion = false;
@@ -204,11 +209,13 @@ int main(int argc, char* argv[])
 		{
 			
 			// If pinging is needed to keep available
+			/*
 			if (auto res = cli.Post("/api/users/me")) {
 			} else {
 				std::cout << "Throwing error " << res.error() << std::endl;
 				throw(res.error());
 			}
+			*/
 			
 
 			if (!connected)
@@ -239,8 +246,8 @@ int main(int argc, char* argv[])
 						games.erase(it->first);
 
 						//cout << "Slot freed" << endl;
-					}
-					break;
+						break;
+					}	
 				}
 			}
 			
