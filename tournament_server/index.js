@@ -97,7 +97,7 @@ app.post("/", function(req, res)
 
 		let pWin = (1.0 / (1.0 + Math.pow(10, ((elo[winner] - elo[loser])/400))));
 		console.log(`W:${bot1}(${(Math.round(elo[bot1] * 100) / 100).toFixed(2)}) vs B:${bot2}(${(Math.round(elo[bot2] * 100) / 100).toFixed(2)}), winner: ${winner}`);
-		elo[winner] += K * pWin;
+		elo[winner] += K * (1.0 - pWin);
 		elo[loser] -= K * (1.0 - pWin);
 		console.log(`W:${bot1}(${(Math.round(elo[bot1] * 100) / 100).toFixed(2)}) vs B:${bot2}(${(Math.round(elo[bot2] * 100) / 100).toFixed(2)}), new elo`);
 		console.log();
