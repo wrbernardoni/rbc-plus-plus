@@ -4,6 +4,7 @@
 #include "../reconUtils/BotBase.h"
 #include "../utilities/BoardManager.h"
 #include "../utilities/EngineBase.h"
+#include "../utilities/MoveProbability.h"
 
 #include <set>
 
@@ -21,6 +22,7 @@ namespace WRB_Bot
 	public:
 		WRB_Chess::EngineBase* engine;
 		Inference(WRB_Chess::EngineBase*);
+		Inference(WRB_Chess::EngineBase*, WRB_Chess::MoveProbability*);
 		void handle_game_start(WRB_Chess::Color color, WRB_Chess::Bitboard board, std::string opponent_name);
 		void handle_opponent_move_result(bool pieceCaptured, int square);
 		short choose_sense(std::vector<short> sense_actions, std::vector<WRB_Chess::Move> move_actions, double seconds_left);

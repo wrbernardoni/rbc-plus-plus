@@ -16,6 +16,11 @@ WRB_Bot::Inference::Inference(WRB_Chess::EngineBase* e)
 	this->engine = e;
 }
 
+WRB_Bot::Inference::Inference(WRB_Chess::EngineBase* e, WRB_Chess::MoveProbability* mP) : boards(mP)
+{
+	this->engine = e;
+}
+
 void WRB_Bot::Inference::handle_game_start(WRB_Chess::Color color, WRB_Chess::Bitboard board, std::string opponent_name)
 {
 	boards.Initialize(color, board);

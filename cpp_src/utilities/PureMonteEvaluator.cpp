@@ -6,7 +6,7 @@
 WRB_Chess::PureMonte_Evaluator::PureMonte_Evaluator(unsigned int playouts)
 {
 	playoutsPerEval = playouts;
-	srand(time(0));
+	//srand(time(0));
 }
 
 double WRB_Chess::PureMonte_Evaluator::EvaluatePosition(const WRB_Chess::Bitboard& brd, WRB_Chess::Color toMove)
@@ -21,7 +21,7 @@ double WRB_Chess::PureMonte_Evaluator::EvaluatePosition(const WRB_Chess::Bitboar
 		WRB_Chess::Bitboard gameBrd = brd;
 
 		WRB_Chess::Color activeColor = toMove;
-		int it = 0;
+		int it = 1;
 		while (gameBrd.KingsAlive() && it < 1000)
 		{
 			it++;

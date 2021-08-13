@@ -6,7 +6,17 @@
 
 WRB_Chess::BoardManager::BoardManager()
 {
+	mP = new WRB_Chess::MoveProbability();
+}
 
+WRB_Chess::BoardManager::BoardManager(WRB_Chess::MoveProbability* p)
+{
+	mP = p;
+}
+
+WRB_Chess::BoardManager::~BoardManager()
+{
+	delete mP;
 }
 
 void WRB_Chess::BoardManager::Initialize(WRB_Chess::Color color, WRB_Chess::Bitboard b)
@@ -24,8 +34,12 @@ WRB_Chess::InformationSet WRB_Chess::BoardManager::AdvanceOpponentMove(const WRB
 	for (auto it = brds.boards.begin(); it != brds.boards.end(); it++)
 	{
 		std::vector<WRB_Chess::Move> mvs = (*it).AvailableMoves(OPPOSITE_COLOR(c));
+		std::vector<double> mProb = mP->moveProb((*it), mvs);
 		for (int i = 0; i < mvs.size(); i++)
 		{
+			if (mProb[i] == 0)
+				continue;
+			
 			WRB_Chess::Bitboard b = (*it);
 			bool cap = false;
 			short cS = -1;
@@ -36,8 +50,9 @@ WRB_Chess::InformationSet WRB_Chess::BoardManager::AdvanceOpponentMove(const WRB
 				iS.boards.emplace(b);
 				if (brds.probability.count((*it)) > 0)
 				{
-					iS.probability[b].p += brds.probability.at((*it)).p / mvs.size();
-					totalMass += brds.probability.at((*it)).p / mvs.size();
+					double p = brds.probability.at((*it)).p * mProb[i];
+					iS.probability[b].p += p;
+					totalMass += p;
 				}
 				else
 				{

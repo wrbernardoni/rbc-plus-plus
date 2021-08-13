@@ -72,7 +72,8 @@ std::pair<short, std::unordered_map<WRB_Chess::Bitboard, WRB_Chess::Move, WRB_Ch
 	if (brds.boards.size() == 0)
 		return std::pair<short, std::unordered_map<WRB_Chess::Bitboard, WRB_Chess::Move, WRB_Chess::BoardHash>>();
 
-	std::vector<WRB_Chess::Move> mvs = (*(brds.boards.cbegin())).AvailableMoves(c);
+	WRB_Chess::Bitboard firstB = *brds.boards.cbegin();
+	std::vector<WRB_Chess::Move> mvs = ((firstB)).AvailableMoves(c);
 
 	std::unordered_map<WRB_Chess::Bitboard, std::unordered_map<WRB_Chess::Move, double, WRB_Chess::MoveHash>, WRB_Chess::BoardHash> mvScore;
 
@@ -87,82 +88,119 @@ std::pair<short, std::unordered_map<WRB_Chess::Bitboard, WRB_Chess::Move, WRB_Ch
 				scores[eBrd] = -1.0 * EvaluatePosition(eBrd, OPPOSITE_COLOR(c));
 			}
 
-			mvScore[(*it)][mvs[i]] = scores[eBrd];
+			double bP = 0.0;
+			if (brds.probability.count((*it)) > 0)
+			{
+				bP = brds.probability.at(*it).p;
+			}
+
+			mvScore[(*it)][mvs[i]] = scores[eBrd] * bP;
 		}
 	}
 
-	short bestSense = -1;
-	int minN = -1;
+	std::vector<short> bestSense;
+	double minN = -1;
 	double bestES = 0.0;
-	std::unordered_map<WRB_Chess::Bitboard, WRB_Chess::Move, WRB_Chess::BoardHash> bestPolicy;
+
+	std::unordered_map<short, std::unordered_map<WRB_Chess::Bitboard, WRB_Chess::Move, WRB_Chess::BoardHash>> policies;
 	for (int j = 1; j < 7; j++)
 	{
 		for (int i = 1; i < 7; i++)
 		{
+			// This is a temporary time saving measure. We should consider scans of our own pieces, but not now.
+			// if (firstB.PieceAt(i + 8*j).color == c)
+			// 	continue;
+
 			std::unordered_map<WRB_Chess::Bitboard, std::unordered_set<WRB_Chess::Bitboard, WRB_Chess::BoardHash>, WRB_Chess::BoardHash> partition;
 			for (auto it = brds.boards.begin(); it != brds.boards.end(); it++)
 			{
 				WRB_Chess::Bitboard masked = (*it).senseMask(i + 8*j);
 				partition[masked].emplace((*it));
 			}
+
+			// No need to evaluate partition if it doesn't discern anything 
+			if ((partition.size() < 2) && bestSense.size() != 0)
+				continue;
 	
 			double ES = 0.0;
-			int maxN = 0;
-			std::unordered_map<WRB_Chess::Bitboard, WRB_Chess::Move, WRB_Chess::BoardHash> localPolicy;
+			double maxN = 0;
 			
 			for (auto it = partition.begin(); it != partition.end(); it++)
 			{
-				int bestMv = -1;
 				double sc = 0.0;
+				std::vector<int> bestMvs;
 
 				for (int k = 0; k < mvs.size(); k++)
 				{
 					double lms = 0.0;
 					for (auto bd = it->second.cbegin(); bd != it->second.cend(); bd++)
 					{
-						double bP = 0.0;
-						if (brds.probability.count((*bd)) > 0)
-						{
-							bP = brds.probability.at(*bd).p;
-						}
+						// double bP = 0.0;
+						// if (brds.probability.count((*bd)) > 0)
+						// {
+						// 	bP = brds.probability.at(*bd).p;
+						// }
 
 						//std::cout << bP << std::endl;
 
-						lms += mvScore[(*bd)][mvs[k]] * bP;
+						lms += mvScore[(*bd)][mvs[k]];// * bP;
 					}
 
-					if ((bestMv == -1) || (lms > sc))
+					if ((bestMvs.size() == 0) || (lms > sc))
 					{
-						bestMv = k;
+						bestMvs.clear();
+						bestMvs.push_back(k);
 						sc = lms;
 					}
+					else if (lms == sc)
+					{
+						bestMvs.push_back(k);
+					}
 				}
-				localPolicy[it->first] = mvs[bestMv];
+				if (bestMvs.size() != 0)
+					policies[i + 8*j][it->first] = mvs[bestMvs[rand() % bestMvs.size()]];
+				else
+					policies[i + 8*j][it->first] = WRB_Chess::Move();
+
 				ES += sc;
-				if (it->second.size() > maxN)
+				for (auto bd = it->second.cbegin(); bd != it->second.cend(); bd++)
 				{
-					maxN = it->second.size();
+					double bP = 0.0;
+					if (brds.probability.count((*bd)) > 0)
+					{
+						bP = brds.probability.at(*bd).p;
+					}
+
+					//std::cout << bP << std::endl;
+
+					maxN += it->second.size() * bP;
 				}
 			}
 	
-			if ((bestSense == -1) || (bestES < ES))
+			if ((bestSense.size() == 0) || (bestES < ES))
 			{
 				bestES = ES;
-				bestSense = i + 8 * j;
-				bestPolicy = localPolicy;
+				bestSense.clear();
+				bestSense.push_back(i + 8 * j);
 				minN = maxN;
 			}
 			else if ((bestES == ES) && (maxN < minN))
 			{
-				bestES = ES;
-				bestSense = i + 8 * j;
-				bestPolicy = localPolicy;
+				bestSense.clear();
+				bestSense.push_back(i + 8 * j);
 				minN = maxN;
+			}
+			else if ((bestES == ES) && (maxN == minN))
+			{
+				bestSense.push_back(i + 8 * j);
 			}
 		}
 	}
+	if (bestSense.size() == 0)
+		bestSense.push_back(-1);
 	
 	std::cout << "\t\t\tExpected score from scan: " << bestES << std::endl;
-	
-	return std::pair<short, std::unordered_map<WRB_Chess::Bitboard, WRB_Chess::Move, WRB_Chess::BoardHash>>(bestSense,bestPolicy);
+	std::cout << "\t\t\tExpected number of boards: " << minN << std::endl;
+	short senseChoice = bestSense[rand() % bestSense.size()];
+	return std::pair<short, std::unordered_map<WRB_Chess::Bitboard, WRB_Chess::Move, WRB_Chess::BoardHash>>(senseChoice,policies[senseChoice]);
 }

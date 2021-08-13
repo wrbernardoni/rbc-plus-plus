@@ -13,7 +13,7 @@ LDFLAGS+=-lcrypto
 INCLUDES = -I. -Ichess -IreconUtils -Ibots -Iutilities
 
 
-all: BuildPath BoardTest BotBattle HTTPTest Connect LocalTournament
+all: BuildPath BoardTest BotBattle HTTPTest Connect LocalTournament EndGames
 
 BuildPath : 
 	mkdir -p build
@@ -30,6 +30,10 @@ LocalTournament : localTournament.cpp ChessUtilities ReconUtilities Bots Utiliti
 
 Connect : connectToServer.cpp ChessUtilities ReconUtilities Bots Utilities
 	$(CC) $(CFLAGS) -o build/connect connectToServer.cpp build/chess/*.o build/recon/*.o build/bots/*.o build/utilities/*.o $(INCLUDES) $(LDFLAGS) 
+
+EndGames : noMoreGames.cpp
+	$(CC) $(CFLAGS) -o build/endGames noMoreGames.cpp $(INCLUDES) $(LDFLAGS) 
+
 
 BoardTest : boardTest.o ChessUtilities
 	$(CC) $(CFLAGS) -o build/boardTest build/boardTest.o build/chess/*.o $(INCLUDES) $(LDFLAGS) 

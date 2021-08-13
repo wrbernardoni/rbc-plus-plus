@@ -2,6 +2,7 @@
 #define WRB_BOARD_MANAGER_H_
 
 #include "../chess/board.h"
+#include "MoveProbability.h"
 #include <unordered_set>
 #include <unordered_map>
 
@@ -30,17 +31,20 @@ namespace WRB_Chess
 	{
 	private:
 		WRB_Chess::Color c;
+		WRB_Chess::MoveProbability* mP;
 	public:
 		InformationSet infoSet;
 		
+		BoardManager(WRB_Chess::MoveProbability*);
 		BoardManager();
+		~BoardManager();
 
 		void Initialize(WRB_Chess::Color c, WRB_Chess::Bitboard b);
 		void OpponentMove(short captureSquare);
 		void SenseResult(std::vector<std::pair<short, WRB_Chess::ColorPiece>>&);
 		void TakenMove(WRB_Chess::Move requested_move, WRB_Chess::Move taken_move, short capture_square);
 
-		static InformationSet AdvanceOpponentMove(const InformationSet &brds, short capture_square, WRB_Chess::Color);
+		InformationSet AdvanceOpponentMove(const InformationSet &brds, short capture_square, WRB_Chess::Color);
 
 		inline unsigned int size() { return infoSet.boards.size(); };
 	};

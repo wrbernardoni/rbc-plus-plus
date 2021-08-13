@@ -17,8 +17,7 @@
 #include "chess/board.h"
 #include "bots/inference.h"
 
-#include "utilities/MinBoardsScanEngine.h"
-#include "utilities/UniformExpectimaxEngine.h"
+#include "utilities/ExpectimaxEngine.h"
 
 #include "../utilities/json.hpp"
 using json = nlohmann::json;
@@ -49,7 +48,7 @@ void PlayGame(httplib::Client* cli, std::string server_url, int invite, std::str
 		WRB_Chess::RemoteGame game(cli, server_url, gameID, user, pass);
 	
 		cout << "Game instantiated" << endl;
-		WRB_Chess::UniformExpectimax engine(10);
+		WRB_Chess::Expectimax engine(10);
 		WRB_Bot::Inference bot(&engine);
 	
 		WRB_Chess::Color mColor = game.getColor();

@@ -61,9 +61,10 @@ void PlayGame(httplib::Client* cli, int gameN, BotConstructor* whiteBot, BotCons
 		while(!game.is_over())
 		{
 			activeTurn = (short)game.turn();
+			cout << endl << endl;
 			cout << gameHead <<  turnCount << " " << (activeTurn == 0? "White: " + whiteBName : "Black: "  + blackBName) << " turn starts: " << game.get_seconds_left() << " seconds remaining." << endl;
-			cout << gameHead << "Initial Board State" << endl;
-			cout << WRB_Chess::GetPrintable(game.getBoard()) << endl;
+			cout << gameHead << "Board State" << endl;
+			cout << WRB_Chess::GetPrintable(game.getBoard());
 			auto senseActions = game.sense_actions();
 			auto moveActions = game.move_actions();
 	
@@ -204,6 +205,89 @@ class ExpectimaxConst : public BotConstructor
 	};
 };
 
+
+#include "utilities/ShannonExpectimax.h"
+
+class ShannonExpectimaxConst : public BotConstructor
+{
+	BotBase* createBot() 
+	{ 
+		WRB_Chess::ShannonExpectimax* eng = new WRB_Chess::ShannonExpectimax();
+		return new WRB_Bot::Inference(eng); 
+	};
+	string getName() { return "S_Expectimax"; };
+	void destructBot(BotBase* b) 
+	{ 
+		delete ((WRB_Bot::Inference*)b)->engine; 
+		delete b; 
+	};
+};
+
+#include "utilities/MonteShannonExpectimax.h"
+
+class MonteShannonExpectimaxConst : public BotConstructor
+{
+	BotBase* createBot() 
+	{ 
+		WRB_Chess::MonteShannonExpectimax* eng = new WRB_Chess::MonteShannonExpectimax(20,10);
+		return new WRB_Bot::Inference(eng); 
+	};
+	string getName() { return "MS_Expectimax"; };
+	void destructBot(BotBase* b) 
+	{ 
+		delete ((WRB_Bot::Inference*)b)->engine; 
+		delete b; 
+	};
+};
+
+#include "utilities/MoveProbabilityOld.h"
+
+class ExpectimaxMPOldConst : public BotConstructor
+{
+	BotBase* createBot() 
+	{ 
+		WRB_Chess::Expectimax* eng = new WRB_Chess::Expectimax(10);
+		return new WRB_Bot::Inference(eng, new WRB_Chess::OldMoveProbability()); 
+	};
+	string getName() { return "Expectimax:MPO"; };
+	void destructBot(BotBase* b) 
+	{ 
+		delete ((WRB_Bot::Inference*)b)->engine; 
+		delete b; 
+	};
+};
+
+class ShannonExpectimaxMPOldConst : public BotConstructor
+{
+	BotBase* createBot() 
+	{ 
+		WRB_Chess::ShannonExpectimax* eng = new WRB_Chess::ShannonExpectimax();
+		return new WRB_Bot::Inference(eng, new WRB_Chess::OldMoveProbability()); 
+	};
+	string getName() { return "S_Expectimax:MPO"; };
+	void destructBot(BotBase* b) 
+	{ 
+		delete ((WRB_Bot::Inference*)b)->engine; 
+		delete b; 
+	};
+};
+
+class MonteShannonExpectimaxMPOldConst : public BotConstructor
+{
+	BotBase* createBot() 
+	{ 
+		WRB_Chess::MonteShannonExpectimax* eng = new WRB_Chess::MonteShannonExpectimax(20,10);
+		return new WRB_Bot::Inference(eng, new WRB_Chess::OldMoveProbability()); 
+	};
+	string getName() { return "MS_Expectimax:MPO"; };
+	void destructBot(BotBase* b) 
+	{ 
+		delete ((WRB_Bot::Inference*)b)->engine; 
+		delete b; 
+	};
+};
+
+
 #include "utilities/MinBoardsScanEngine.h"
 class MinScanConst : public BotConstructor
 {
@@ -227,6 +311,11 @@ int main(int argc, char* argv[])
 	bots.push_back(new UniformExpectimaxConst());
 	//bots.push_back(new MinScanConst());
 	bots.push_back(new ExpectimaxConst());
+	bots.push_back(new ExpectimaxMPOldConst());
+	bots.push_back(new ShannonExpectimaxConst());
+	bots.push_back(new MonteShannonExpectimaxConst());
+	bots.push_back(new MonteShannonExpectimaxMPOldConst());
+	bots.push_back(new ShannonExpectimaxMPOldConst());
 
 	WRB_Chess::BoardHash::Init();
 	// TODO Make these cmd line args
@@ -239,6 +328,7 @@ int main(int argc, char* argv[])
 
 	unordered_map<int, GameThread> games;
 	int gameN = 0;
+	int gameSet = rand() % (bots.size() * (bots.size() - 1));
 	while(true)
 	{
 		try
@@ -263,16 +353,19 @@ int main(int argc, char* argv[])
 				}
 			}
 			
-			if (games.size() < concurrent_games)
+			while (games.size() < concurrent_games)
 			{
 				// Create new games
 				//void PlayGame(httplib::Client* cli, int gameN, BotConstructor* whiteBot, BotConstructor* blackBot, bool* finished)
-				int botW = rand() % bots.size();
-				int botB = rand() % (bots.size() - 1);
+				int botW = gameSet / (bots.size() - 1);
+				int botB = gameSet % (bots.size() - 1);
 				if (botB >= botW)
 				{
 					botB += 1;
 				}
+
+				gameSet += 1;
+				gameSet = gameSet % (bots.size() * (bots.size() - 1));
 
 				cout << endl << "Beginning game " << gameN << endl;
 				bool* newTracker = new bool;

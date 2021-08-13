@@ -89,7 +89,7 @@ std::pair<short, std::unordered_map<WRB_Chess::Bitboard, WRB_Chess::Move, WRB_Ch
 	short bestSense = -1;
 	int minN = -1;
 	double bestES = 0.0;
-	std::unordered_map<WRB_Chess::Bitboard, WRB_Chess::Move, WRB_Chess::BoardHash> bestPolicy;
+	std::unordered_map<short, std::unordered_map<WRB_Chess::Bitboard, WRB_Chess::Move, WRB_Chess::BoardHash>> policies;
 	for (int j = 1; j < 7; j++)
 	{
 		for (int i = 1; i < 7; i++)
@@ -103,7 +103,6 @@ std::pair<short, std::unordered_map<WRB_Chess::Bitboard, WRB_Chess::Move, WRB_Ch
 	
 			double ES = 0.0;
 			int maxN = 0;
-			std::unordered_map<WRB_Chess::Bitboard, WRB_Chess::Move, WRB_Chess::BoardHash> localPolicy;
 			
 			for (auto it = partition.begin(); it != partition.end(); it++)
 			{
@@ -124,7 +123,7 @@ std::pair<short, std::unordered_map<WRB_Chess::Bitboard, WRB_Chess::Move, WRB_Ch
 						sc = lms;
 					}
 				}
-				localPolicy[it->first] = mvs[bestMv];
+				policies[i + 8*j][it->first] = mvs[bestMv];
 				ES += sc;
 				if (it->second.size() > maxN)
 				{
@@ -136,14 +135,12 @@ std::pair<short, std::unordered_map<WRB_Chess::Bitboard, WRB_Chess::Move, WRB_Ch
 			{
 				bestES = ES;
 				bestSense = i + 8 * j;
-				bestPolicy = localPolicy;
 				minN = maxN;
 			}
 			else if ((bestES == ES) && (maxN < minN))
 			{
 				bestES = ES;
 				bestSense = i + 8 * j;
-				bestPolicy = localPolicy;
 				minN = maxN;
 			}
 		}
@@ -151,5 +148,5 @@ std::pair<short, std::unordered_map<WRB_Chess::Bitboard, WRB_Chess::Move, WRB_Ch
 	
 	std::cout << "\t\t\tExpected score from scan: " << bestES / ((double) brds.boards.size()) << std::endl;
 	
-	return std::pair<short, std::unordered_map<WRB_Chess::Bitboard, WRB_Chess::Move, WRB_Chess::BoardHash>>(bestSense,bestPolicy);
+	return std::pair<short, std::unordered_map<WRB_Chess::Bitboard, WRB_Chess::Move, WRB_Chess::BoardHash>>(bestSense,policies[bestSense]);
 }
