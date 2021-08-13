@@ -229,7 +229,7 @@ class MonteShannonExpectimaxConst : public BotConstructor
 {
 	BotBase* createBot() 
 	{ 
-		WRB_Chess::MonteShannonExpectimax* eng = new WRB_Chess::MonteShannonExpectimax(20,10);
+		WRB_Chess::MonteShannonExpectimax* eng = new WRB_Chess::MonteShannonExpectimax(10,10);
 		return new WRB_Bot::Inference(eng); 
 	};
 	string getName() { return "MS_Expectimax"; };
@@ -276,10 +276,75 @@ class MonteShannonExpectimaxMPOldConst : public BotConstructor
 {
 	BotBase* createBot() 
 	{ 
-		WRB_Chess::MonteShannonExpectimax* eng = new WRB_Chess::MonteShannonExpectimax(20,10);
+		WRB_Chess::MonteShannonExpectimax* eng = new WRB_Chess::MonteShannonExpectimax(10,10);
 		return new WRB_Bot::Inference(eng, new WRB_Chess::OldMoveProbability()); 
 	};
 	string getName() { return "MS_Expectimax:MPO"; };
+	void destructBot(BotBase* b) 
+	{ 
+		delete ((WRB_Bot::Inference*)b)->engine; 
+		delete b; 
+	};
+};
+
+
+#include "utilities/MonteShannon2Expectimax.h"
+
+class MonteShannon2ExpectimaxConst : public BotConstructor
+{
+	BotBase* createBot() 
+	{ 
+		WRB_Chess::MonteShannon2Expectimax* eng = new WRB_Chess::MonteShannon2Expectimax(10,10);
+		return new WRB_Bot::Inference(eng); 
+	};
+	string getName() { return "MS2_Expectimax"; };
+	void destructBot(BotBase* b) 
+	{ 
+		delete ((WRB_Bot::Inference*)b)->engine; 
+		delete b; 
+	};
+};
+
+class MonteShannon2ExpectimaxMPOldConst : public BotConstructor
+{
+	BotBase* createBot() 
+	{ 
+		WRB_Chess::MonteShannon2Expectimax* eng = new WRB_Chess::MonteShannon2Expectimax(10,10);
+		return new WRB_Bot::Inference(eng, new WRB_Chess::OldMoveProbability()); 
+	};
+	string getName() { return "MS2_Expectimax:MPO"; };
+	void destructBot(BotBase* b) 
+	{ 
+		delete ((WRB_Bot::Inference*)b)->engine; 
+		delete b; 
+	};
+};
+
+#include "utilities/Shannon2Expectimax.h"
+
+class Shannon2ExpectimaxConst : public BotConstructor
+{
+	BotBase* createBot() 
+	{ 
+		WRB_Chess::Shannon2Expectimax* eng = new WRB_Chess::Shannon2Expectimax();
+		return new WRB_Bot::Inference(eng); 
+	};
+	string getName() { return "S2_Expectimax"; };
+	void destructBot(BotBase* b) 
+	{ 
+		delete ((WRB_Bot::Inference*)b)->engine; 
+		delete b; 
+	};
+};
+
+class Shannon2ExpectimaxMPOldConst : public BotConstructor
+{
+	BotBase* createBot() 
+	{ 
+		WRB_Chess::Shannon2Expectimax* eng = new WRB_Chess::Shannon2Expectimax();
+		return new WRB_Bot::Inference(eng, new WRB_Chess::OldMoveProbability()); 
+	};
+	string getName() { return "S2_Expectimax:MPO"; };
 	void destructBot(BotBase* b) 
 	{ 
 		delete ((WRB_Bot::Inference*)b)->engine; 
@@ -316,6 +381,10 @@ int main(int argc, char* argv[])
 	bots.push_back(new MonteShannonExpectimaxConst());
 	bots.push_back(new MonteShannonExpectimaxMPOldConst());
 	bots.push_back(new ShannonExpectimaxMPOldConst());
+	bots.push_back(new MonteShannon2ExpectimaxConst());
+	bots.push_back(new MonteShannon2ExpectimaxMPOldConst());
+	bots.push_back(new Shannon2ExpectimaxConst());
+	bots.push_back(new Shannon2ExpectimaxMPOldConst());
 
 	WRB_Chess::BoardHash::Init();
 	// TODO Make these cmd line args
@@ -328,7 +397,8 @@ int main(int argc, char* argv[])
 
 	unordered_map<int, GameThread> games;
 	int gameN = 0;
-	int gameSet = rand() % (bots.size() * (bots.size() - 1));
+
+	vector<int> gamesInRound;
 	while(true)
 	{
 		try
@@ -355,6 +425,20 @@ int main(int argc, char* argv[])
 			
 			while (games.size() < concurrent_games)
 			{
+				if (gamesInRound.size() == 0)
+				{
+					cout << "New round begun." << endl;
+					for (int i = 0; i < (bots.size() * (bots.size() - 1)); i++)
+					{
+						gamesInRound.push_back(i);
+					}
+				}
+
+				cout << gamesInRound.size() << " games remaining in round." << endl;
+
+				int choice = rand() % gamesInRound.size();
+				int gameSet = gamesInRound[choice];
+				gamesInRound.erase(gamesInRound.begin() + choice);
 				// Create new games
 				//void PlayGame(httplib::Client* cli, int gameN, BotConstructor* whiteBot, BotConstructor* blackBot, bool* finished)
 				int botW = gameSet / (bots.size() - 1);

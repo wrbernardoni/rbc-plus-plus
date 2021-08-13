@@ -10,12 +10,10 @@ namespace WRB_Chess
 	class MonteShannonExpectimax : public Expectimax
 	{
 	private:
-		unsigned int playoutsPerEval;
 		unsigned int depth;
 	public:
-		MonteShannonExpectimax(unsigned int ppE, unsigned int d) : Expectimax(0) 
+		MonteShannonExpectimax(unsigned int ppE, unsigned int d) : Expectimax(ppE) 
 		{
-			playoutsPerEval = ppE;
 			depth = d;
 		};
 		virtual double EvaluatePosition(const WRB_Chess::Bitboard& b, WRB_Chess::Color c)
