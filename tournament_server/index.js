@@ -86,7 +86,23 @@ function sendRankings()
 }
 
 http.listen(3000, function() {
-	console.log("Server booted and listening on :3000")
+	function getIPAddress() { // Function from https://stackoverflow.com/a/15075395
+	  var interfaces = require('os').networkInterfaces();
+	  for (var devName in interfaces) {
+	    var iface = interfaces[devName];
+
+	    for (var i = 0; i < iface.length; i++) {
+	      var alias = iface[i];
+	      if (alias.family === 'IPv4' && alias.address !== '127.0.0.1' && !alias.internal)
+	        return alias.address;
+	    }
+	  }
+	  return '0.0.0.0';
+	}
+
+	let addr = getIPAddress();
+
+	console.log(`Server booted and listening on ${addr}:3000`)
 	setInterval(sendRankings,15*60*1000)
 })
 
