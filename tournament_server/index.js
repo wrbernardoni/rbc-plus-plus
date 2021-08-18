@@ -37,9 +37,7 @@ let elo = JSON.parse(rawdata);
 let webhooks = JSON.parse(fs.readFileSync('./webhooks.json'));
 let winloss = JSON.parse(fs.readFileSync('./winloss.json'));
 
-http.listen(3000, function() {
-	console.log("Server booted and listening on :3000")
-})
+let changed = true;
 
 function compare( a, b ) {
   if ( a[1] > b[1] ){
@@ -50,6 +48,48 @@ function compare( a, b ) {
   }
   return 0;
 }
+
+function sendRankings()
+{
+	if (!changed)
+		return;
+
+	changed = false;
+	console.log("Sending rankings")
+	let eloArr = []
+	for (key in elo)
+	{
+		eloArr.push([key, elo[key]]);
+	}
+
+	eloArr.sort(compare);
+
+	let reqSend = {}
+
+	let content = "";
+
+	for (let i = 0; i < eloArr.length; i++)
+	{
+		content += `${i+1}: ${eloArr[i][0]} (${(Math.round(eloArr[i][1] * 100) / 100).toFixed(2)})\n`
+	}
+
+	reqSend.content = content;
+
+	request.post(
+	{
+	    url: webhooks.DiscordWebhook,
+	    body: JSON.stringify(reqSend),
+	    headers: {
+	        'Content-Type': 'application/json'
+	    }
+	})
+}
+
+http.listen(3000, function() {
+	console.log("Server booted and listening on :3000")
+	setInterval(sendRankings,15*60*1000)
+})
+
 
 app.get('/', function(req, res) {
 	let eloArr = []
@@ -282,4 +322,5 @@ app.post("/", function(req, res)
 	fs.writeFileSync('./elo.json', JSON.stringify(elo));
 	fs.writeFileSync('./winloss.json', JSON.stringify(winloss));
 	res.send();
+	changed = true;
 })
