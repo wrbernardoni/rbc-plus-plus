@@ -371,6 +371,12 @@ class MinScanConst : public BotConstructor
 
 int main(int argc, char* argv[])
 {
+	if (argc < 2)
+	{
+		cout << "Need at least one argument: LocalTournament #concurrentgames" << endl;
+		return 1;
+	}
+
 	vector<BotConstructor*> bots;
 	bots.push_back(new RandomBotConst());
 	bots.push_back(new UniformExpectimaxConst());
@@ -388,9 +394,15 @@ int main(int argc, char* argv[])
 
 	WRB_Chess::BoardHash::Init();
 	// TODO Make these cmd line args
-	int concurrent_games = 3;
+	int concurrent_games = stoi(argv[1]);
 
-	httplib::Client cli("localhost:3000");
+	string server = "localhost:3000";
+	if (argc > 2)
+	{
+		server = argv[2];
+	}
+
+	httplib::Client cli(server.c_str());
 	cli.enable_server_certificate_verification(false);
 	cli.set_follow_location(true);
 	cli.set_connection_timeout(1800, 0);
