@@ -209,15 +209,15 @@ app.get('/', function(req, res) {
 
 					if (wr < 0.5)
 					{
-						r = (1.0 - wr) * 226 + wr * 221
-						g = (1.0 - wr) * 192 + wr * 227
-						b = (1.0 - wr) * 192 + wr * 233
+						r = (1.0 - wr) * 223 + wr * 221
+						g = (1.0 - wr) * 72 + wr * 227
+						b = (1.0 - wr) * 72 + wr * 233
 					}
 					else
 					{
-						r = (1.0 - wr) * 221 + wr * 197
-						g = (1.0 - wr) * 227 + wr * 226
-						b = (1.0 - wr) * 233 + wr * 192
+						r = (1.0 - wr) * 221 + wr * 94
+						g = (1.0 - wr) * 227 + wr * 223
+						b = (1.0 - wr) * 233 + wr * 72
 					}
 					ret += `<td style=\"background-color:rgb(${r},${g},${b});text-align: center\">`
 				}
