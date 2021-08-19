@@ -14,6 +14,7 @@ ifeq ($(OS),Windows_NT)
     LDFLAGS+=-luser32
 else
     detected_OS := $(shell sh -c 'uname 2>/dev/null || echo Unknown')
+    CFLAGS += -pthread
 endif
 
 INCLUDES = -I. -Ichess -IreconUtils -Ibots -Iutilities
