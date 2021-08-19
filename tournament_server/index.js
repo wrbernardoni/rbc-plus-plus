@@ -103,7 +103,8 @@ http.listen(3000, function() {
 	let addr = getIPAddress();
 
 	console.log(`Server booted and listening on ${addr}:3000`)
-	setInterval(sendRankings,15*60*1000)
+	if (webhooks.DiscordWebhook)
+		setInterval(sendRankings,15*60*1000);
 })
 
 
