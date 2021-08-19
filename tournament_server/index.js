@@ -200,10 +200,27 @@ app.get('/', function(req, res) {
 				if (!l)
 					l = 0;
 
-				if (w > l)
-					ret += "<td style=\"background-color:#c5e2c0;text-align: center\">"
-				else if (w < l)
-					ret += "<td style=\"background-color:#e2c0c0;text-align: center\">"
+				if ((w != 0) || (l != 0))
+				{
+					let wr = w/(w + l);
+					let r = 0;
+					let g = 0;
+					let b = 0;
+
+					if (wr < 0.5)
+					{
+						r = (1.0 - wr) * 226 + wr * 221
+						g = (1.0 - wr) * 192 + wr * 227
+						b = (1.0 - wr) * 192 + wr * 233
+					}
+					else
+					{
+						r = (1.0 - wr) * 221 + wr * 197
+						g = (1.0 - wr) * 227 + wr * 226
+						b = (1.0 - wr) * 233 + wr * 192
+					}
+					ret += `<td style=\"background-color:rgb(${r},${g},${b});text-align: center\">`
+				}
 				else
 					ret += "<td style=\"text-align: center\">"
 
