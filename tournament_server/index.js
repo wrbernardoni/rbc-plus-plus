@@ -207,9 +207,20 @@ app.get('/', function(req, res) {
 					let g = 0;
 					let b = 0;
 
-					r = (1.0 - wr) * 223 + wr * 94
-					g = (1.0 - wr) * 72 + wr * 223
-					b = (1.0 - wr) * 72 + wr * 72
+					if (wr < 0.5)
+					{
+						wr = 2 * wr;
+						r = (1.0 - wr) * 223 + wr * 221
+						g = (1.0 - wr) * 72 + wr * 227
+						b = (1.0 - wr) * 72 + wr * 233
+					}
+					else
+					{
+						wr = 2 * (wr - 0.5)
+						r = (1.0 - wr) * 221 + wr * 94
+						g = (1.0 - wr) * 227 + wr * 223
+						b = (1.0 - wr) * 233 + wr * 72
+					}
 					ret += `<td style=\"background-color:rgb(${r},${g},${b});text-align: center\">`
 				}
 				else
