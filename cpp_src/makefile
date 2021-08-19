@@ -7,7 +7,7 @@ LDFLAGS+=-lcrypto
 
 ifeq ($(OS),Windows_NT) 
     detected_OS := Windows
-    LDFLAGS=-lws2_32
+    LDFLAGS+=-lws2_32
 	LDFLAGS+=-lgdi32
 	LDFLAGS+=-ladvapi32
 	LDFLAGS+=-lcrypt32
