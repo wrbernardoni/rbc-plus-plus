@@ -423,6 +423,163 @@ WRB_Chess::Bitboard WRB_Chess::Bitboard::senseMask(short square) const
 	return masked;
 }
 
+std::vector<WRB_Chess::Move> WRB_Chess::Bitboard::Attacks(Color c, short t)
+{
+	std::vector<WRB_Chess::Move> mvs;
+
+	std::bitset<64> allPieces = this->color_masks[0] | this->color_masks[1];
+
+	// Find potential pawn attacks
+	if (c == WRB_Chess::Color::White)
+	{
+		if ((t - 7) >= 0)
+		{
+			if (this->piece_masks[WRB_Chess::Piece::Pawn][t - 7] && this->color_masks[c][t - 7])
+			{
+				WRB_Chess::Move pawnAttack;
+				pawnAttack.fromSquare = t - 7;
+				pawnAttack.toSquare = t;
+				mvs.push_back(pawnAttack);
+			}
+		}
+
+		if ((t - 9) >= 0)
+		{
+			if (this->piece_masks[WRB_Chess::Piece::Pawn][t - 9] && this->color_masks[c][t - 9])
+			{
+				WRB_Chess::Move pawnAttack;
+				pawnAttack.fromSquare = t - 9;
+				pawnAttack.toSquare = t;
+				mvs.push_back(pawnAttack);
+			}
+		}
+	}
+	else if (c == WRB_Chess::Color::Black)
+	{
+		if ((t + 7) < 64)
+		{
+			if (this->piece_masks[WRB_Chess::Piece::Pawn][t + 7] && this->color_masks[c][t + 7])
+			{
+				WRB_Chess::Move pawnAttack;
+				pawnAttack.fromSquare = t + 7;
+				pawnAttack.toSquare = t;
+				mvs.push_back(pawnAttack);
+			}
+		}
+
+		if ((t + 9) < 64)
+		{
+			if (this->piece_masks[WRB_Chess::Piece::Pawn][t + 9] && this->color_masks[c][t + 9])
+			{
+				WRB_Chess::Move pawnAttack;
+				pawnAttack.fromSquare = t + 9;
+				pawnAttack.toSquare = t;
+				mvs.push_back(pawnAttack);
+			}
+		}
+	}
+
+	// Find potential knight attacks
+	short potAtt [8] = { t + 6, t - 10, t + 15, t - 17, t + 17, t - 15, t + 10, t - 6 };
+	for (int i = 0; i < 8; i++)
+	{
+		if ((potAtt[i] >= 0) && (potAtt[i] < 64))
+		{
+			if (this->piece_masks[WRB_Chess::Piece::Knight][potAtt[i]] && this->color_masks[c][potAtt[i]])
+			{
+				WRB_Chess::Move knightAttack;
+				knightAttack.fromSquare = potAtt[i];
+				knightAttack.toSquare = t;
+				mvs.push_back(knightAttack);
+			}
+		}
+	}
+
+	// Find potential king attacks
+	short pKA [8] = {t - 1, t +7, t - 9, t + 8, t - 8, t +9, t -7, t + 1};
+	for (int i = 0; i < 8; i++)
+	{
+		if ((pKA[i] >= 0) && (pKA[i] < 64))
+		{
+			if (this->piece_masks[WRB_Chess::Piece::King][pKA[i]] && this->color_masks[c][pKA[i]])
+			{
+				WRB_Chess::Move kingAttack;
+				kingAttack.fromSquare = pKA[i];
+				kingAttack.toSquare = t;
+				mvs.push_back(kingAttack);
+			}
+		}
+	}
+
+	// Find potential rook/queen attacks
+	short stepLeft = 1;
+	short stepUp = 0;
+	do
+	{
+		short scan = t;
+
+		do
+		{
+			if ((((scan % 8) + stepLeft) < 0) || (((scan % 8) + stepLeft) > 7))
+			{
+				break;
+			}
+			else if ((((scan / 8) + stepUp) < 0) || (((scan / 8) + stepUp) > 7))
+			{
+				break;
+			}
+			scan = scan + stepLeft + 8 * stepUp;
+			if (this->color_masks[c][scan] && (this->piece_masks[WRB_Chess::Piece::Queen] | this->piece_masks[WRB_Chess::Piece::Rook])[scan])
+			{
+				WRB_Chess::Move slideAttack;
+				slideAttack.fromSquare = scan;
+				slideAttack.toSquare = t;
+				mvs.push_back(slideAttack);
+			}
+
+		} while (!allPieces[scan]);
+
+		short tmp = stepUp;
+		stepUp = -stepLeft;
+		stepLeft = tmp;
+	} while ((stepLeft != 1) && (stepUp != 0));
+
+	// Find potential bishop/queen attacks
+	stepLeft = 1;
+	stepUp = 1;
+	do
+	{
+		short scan = t;
+
+		do
+		{
+			if ((((scan % 8) + stepLeft) < 0) || (((scan % 8) + stepLeft) > 7))
+			{
+				break;
+			}
+			else if ((((scan / 8) + stepUp) < 0) || (((scan / 8) + stepUp) > 7))
+			{
+				break;
+			}
+			scan = scan + stepLeft + 8 * stepUp;
+			if (this->color_masks[c][scan] && (this->piece_masks[WRB_Chess::Piece::Queen] | this->piece_masks[WRB_Chess::Piece::Bishop])[scan])
+			{
+				WRB_Chess::Move slideAttack;
+				slideAttack.fromSquare = scan;
+				slideAttack.toSquare = t;
+				mvs.push_back(slideAttack);
+			}
+
+		} while (!allPieces[scan]);
+
+		short tmp = stepUp;
+		stepUp = -stepLeft;
+		stepLeft = tmp;
+	} while ((stepLeft != 1) && (stepUp != 1));
+
+	return mvs;
+}
+
 std::vector<WRB_Chess::Move> WRB_Chess::Bitboard::AvailableMoves(WRB_Chess::Color c) const
 {
 	//TODO
@@ -686,71 +843,17 @@ std::vector<WRB_Chess::Move> WRB_Chess::Bitboard::AvailableMoves(WRB_Chess::Colo
 
 		if ((this->piece_masks[WRB_Chess::Piece::Knight] & this->color_masks[c])[i])
 		{
-			// Generate knight moves
-			short stepLeft = 2;
-			short stepUp = 1;
-
-			do
+			short potAtt [8] = { i + 6, i - 10, i + 15, i - 17, i + 17, i - 15, i + 10, i - 6 };
+			for (int k = 0; k < 8; k++)
 			{
-				// TODO Reorganize this to be actually good code
-				short pos = i;
-				if ((((pos % 8) + stepLeft) < 0) || (((pos % 8) + stepLeft) > 7))
-				{
-				}
-				else if ((((pos / 8) + stepUp) < 0) || (((pos / 8) + stepUp) > 7))
-				{
-				}
-				else if (this->color_masks[c][pos + stepLeft + 8 * stepUp])
-				{
-				}
-				else
-				{
-					pos = pos + stepLeft + 8 * stepUp;
+				if ((potAtt[k] < 0) || (potAtt[k] >= 64) || this->color_masks[c][potAtt[k]])
+					continue;
 
-					WRB_Chess::Move slide;
-					slide.fromSquare = i;
-					slide.toSquare = pos;
-					mvs.push_back(slide);
-				}
-
-
-				short t = stepLeft;
-				stepLeft = stepUp;
-				stepUp = -t;
-
-			} while ((stepLeft != 2) || (stepUp != 1));
-
-			stepLeft = 2;
-			stepUp = -1;
-			do
-			{
-				// TODO Reorganize this to be actually good code
-				short pos = i;
-				if ((((pos % 8) + stepLeft) < 0) || (((pos % 8) + stepLeft) > 7))
-				{
-				}
-				else if ((((pos / 8) + stepUp) < 0) || (((pos / 8) + stepUp) > 7))
-				{
-				}
-				else if (this->color_masks[c][pos + stepLeft + 8 * stepUp])
-				{
-				}
-				else
-				{
-					pos = pos + stepLeft + 8 * stepUp;
-
-					WRB_Chess::Move slide;
-					slide.fromSquare = i;
-					slide.toSquare = pos;
-					mvs.push_back(slide);
-				}
-
-
-				short t = stepLeft;
-				stepLeft = stepUp;
-				stepUp = -t;
-
-			} while ((stepLeft != 2) || (stepUp != -1));
+				WRB_Chess::Move knightMove;
+				knightMove.fromSquare = i;
+				knightMove.toSquare = potAtt[k];
+				mvs.push_back(knightMove);
+			}
 		}
 
 		if ((this->piece_masks[WRB_Chess::Piece::King] & this->color_masks[c])[i])

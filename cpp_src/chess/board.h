@@ -125,6 +125,7 @@ namespace WRB_Chess
 			Bitboard senseMask(short square) const;
 
 			std::vector<Move> AvailableMoves(Color c) const;
+			std::vector<Move> Attacks(Color c, short t);
 			Move RectifyMove(Move m) const;
 			Move ApplyMove(Move m, bool& capture, short& captureSquare);
 			Move ApplyMove(Move m)

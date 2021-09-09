@@ -14,7 +14,7 @@ namespace WRB_Chess
 		virtual double EvaluatePosition(const WRB_Chess::Bitboard& b, WRB_Chess::Color c)
 		{
 			double score = 0.0;
-			score += 1000.0 * ((int)b.Pieces(c, WRB_Chess::Piece::King).count() - (int)b.Pieces(OPPOSITE_COLOR(c), WRB_Chess::Piece::King).count());
+			score += 200.0 * ((int)b.Pieces(c, WRB_Chess::Piece::King).count() - (int)b.Pieces(OPPOSITE_COLOR(c), WRB_Chess::Piece::King).count());
 			score += 9.0 * ((int)b.Pieces(c, WRB_Chess::Piece::Queen).count() - (int)b.Pieces(OPPOSITE_COLOR(c), WRB_Chess::Piece::Queen).count());
 			score += 5.0 * ((int)b.Pieces(c, WRB_Chess::Piece::Rook).count() - (int)b.Pieces(OPPOSITE_COLOR(c), WRB_Chess::Piece::Rook).count());
 			score += 3.0 * ((int)b.Pieces(c, WRB_Chess::Piece::Bishop).count() - (int)b.Pieces(OPPOSITE_COLOR(c), WRB_Chess::Piece::Bishop).count());
@@ -37,22 +37,8 @@ namespace WRB_Chess
 					{
 						bool good = true;
 						short kingSq = (*WRB_Chess::MaskToSquares(tB.Pieces(c, WRB_Chess::Piece::King)).begin());
-						auto aM = tB.AvailableMoves(OPPOSITE_COLOR(c));
-						for (int j = 0; j < aM.size(); j++)
-						{
-							if (aM[j].toSquare == kingSq)
-							{
-								WRB_Chess::Bitboard testB = tB;
-								testB.ApplyMove(aM[j]);
-								if (!testB.KingsAlive())
-								{
-									good = false;
-									break;
-								}
-							}
-						}
-
-						if (good)
+						auto aM = tB.Attacks(OPPOSITE_COLOR(c), kingSq);
+						if (aM.size() == 0)
 						{
 							tM1++;
 						}
@@ -74,24 +60,9 @@ namespace WRB_Chess
 					tB.ApplyMove(taken);
 					if (tB.Pieces(OPPOSITE_COLOR(c), WRB_Chess::Piece::King) != 0)
 					{
-						bool good = true;
 						short kingSq = (*WRB_Chess::MaskToSquares(tB.Pieces(OPPOSITE_COLOR(c), WRB_Chess::Piece::King)).begin());
-						auto aM = tB.AvailableMoves(c);
-						for (int j = 0; j < aM.size(); j++)
-						{
-							if (aM[j].toSquare == kingSq)
-							{
-								WRB_Chess::Bitboard testB = tB;
-								testB.ApplyMove(aM[j]);
-								if (!testB.KingsAlive())
-								{
-									good = false;
-									break;
-								}
-							}
-						}
-
-						if (good)
+						auto aM = tB.Attacks(c, kingSq);
+						if (aM.size() == 0)
 						{
 							tM2++;
 						}

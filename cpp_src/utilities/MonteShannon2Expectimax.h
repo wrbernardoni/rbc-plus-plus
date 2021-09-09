@@ -31,14 +31,15 @@ namespace WRB_Chess
 				while (gameBrd.KingsAlive() && it < depth)
 				{
 					it++;
-					std::vector<WRB_Chess::Move> mvs = gameBrd.AvailableMoves(activeColor);
+					auto mvs = gameBrd.AvailableMoves(activeColor);
 					short kingSq = (*WRB_Chess::MaskToSquares(gameBrd.Pieces(OPPOSITE_COLOR(activeColor), WRB_Chess::Piece::King)).begin());
-					for (int i = 0; i < mvs.size(); i++)
+					auto kingAtt = gameBrd.Attacks(activeColor, kingSq);
+					for (int i = 0; i < kingAtt.size(); i++)
 					{
-						if (mvs[i].toSquare == kingSq)
+						if (kingAtt[i].toSquare == kingSq)
 						{
 							WRB_Chess::Bitboard testB = gameBrd;
-							testB.ApplyMove(mvs[i]);
+							testB.ApplyMove(kingAtt[i]);
 							if (!testB.KingsAlive())
 							{
 								gameBrd = testB;
@@ -61,7 +62,7 @@ namespace WRB_Chess
 					it = 1;
 
 				double score = 0.0;
-				score += 1000.0 * ((int)gameBrd.Pieces(c, WRB_Chess::Piece::King).count() - (int)gameBrd.Pieces(OPPOSITE_COLOR(c), WRB_Chess::Piece::King).count());
+				score += 200.0 * ((int)gameBrd.Pieces(c, WRB_Chess::Piece::King).count() - (int)gameBrd.Pieces(OPPOSITE_COLOR(c), WRB_Chess::Piece::King).count());
 				score += 9.0 * ((int)gameBrd.Pieces(c, WRB_Chess::Piece::Queen).count() - (int)gameBrd.Pieces(OPPOSITE_COLOR(c), WRB_Chess::Piece::Queen).count());
 				score += 5.0 * ((int)gameBrd.Pieces(c, WRB_Chess::Piece::Rook).count() - (int)gameBrd.Pieces(OPPOSITE_COLOR(c), WRB_Chess::Piece::Rook).count());
 				score += 3.0 * ((int)gameBrd.Pieces(c, WRB_Chess::Piece::Bishop).count() - (int)gameBrd.Pieces(OPPOSITE_COLOR(c), WRB_Chess::Piece::Bishop).count());
@@ -83,22 +84,8 @@ namespace WRB_Chess
 						{
 							bool good = true;
 							short kingSq = (*WRB_Chess::MaskToSquares(tB.Pieces(c, WRB_Chess::Piece::King)).begin());
-							auto aM = tB.AvailableMoves(OPPOSITE_COLOR(c));
-							for (int j = 0; j < aM.size(); j++)
-							{
-								if (aM[j].toSquare == kingSq)
-								{
-									WRB_Chess::Bitboard testB = tB;
-									testB.ApplyMove(aM[j]);
-									if (!testB.KingsAlive())
-									{
-										good = false;
-										break;
-									}
-								}
-							}
-
-							if (good)
+							auto aM = tB.Attacks(OPPOSITE_COLOR(c), kingSq);
+							if (aM.size() == 0)
 							{
 								tM1++;
 							}
@@ -122,22 +109,8 @@ namespace WRB_Chess
 						{
 							bool good = true;
 							short kingSq = (*WRB_Chess::MaskToSquares(tB.Pieces(OPPOSITE_COLOR(c), WRB_Chess::Piece::King)).begin());
-							auto aM = tB.AvailableMoves(c);
-							for (int j = 0; j < aM.size(); j++)
-							{
-								if (aM[j].toSquare == kingSq)
-								{
-									WRB_Chess::Bitboard testB = tB;
-									testB.ApplyMove(aM[j]);
-									if (!testB.KingsAlive())
-									{
-										good = false;
-										break;
-									}
-								}
-							}
-
-							if (good)
+							auto aM = tB.Attacks(c, kingSq);
+							if (aM.size() == 0)
 							{
 								tM2++;
 							}
