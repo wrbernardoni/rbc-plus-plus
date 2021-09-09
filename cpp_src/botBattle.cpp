@@ -15,8 +15,8 @@ int main()
 	WRB_Chess::BoardHash::Init();
 
 	WRB_Chess::LocalGame game(900.0);
-	WRB_Chess::MonteShannon2Expectimax wEngine(5, 10);
-	WRB_Chess::MonteShannon2Expectimax bEngine(5, 10);
+	WRB_Chess::MonteShannon2Expectimax wEngine(5, 10, 100000);
+	WRB_Chess::MonteShannon2Expectimax bEngine(5, 10, 100000);
 	WRB_Bot::Inference whiteBot(&wEngine);
 	WRB_Bot::Inference blackBot(&bEngine);
 

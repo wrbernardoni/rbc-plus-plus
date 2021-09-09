@@ -10,7 +10,7 @@ namespace WRB_Chess
 	private:
 		unsigned int playoutsPerEval;
 	public:
-		ShannonExpectimax() : Expectimax(0) {};
+		ShannonExpectimax(size_t ns) : Expectimax(0, ns) {};
 		virtual double EvaluatePosition(const WRB_Chess::Bitboard& b, WRB_Chess::Color c)
 		{
 			double score = 0.0;

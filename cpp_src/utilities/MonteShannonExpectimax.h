@@ -12,7 +12,7 @@ namespace WRB_Chess
 	private:
 		unsigned int depth;
 	public:
-		MonteShannonExpectimax(unsigned int ppE, unsigned int d) : Expectimax(ppE) 
+		MonteShannonExpectimax(unsigned int ppE, unsigned int d, size_t ns) : Expectimax(ppE, ns) 
 		{
 			depth = d;
 		};

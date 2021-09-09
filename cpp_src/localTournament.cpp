@@ -177,7 +177,7 @@ class UniformExpectimaxConst : public BotConstructor
 {
 	BotBase* createBot() 
 	{ 
-		WRB_Chess::UniformExpectimax* eng = new WRB_Chess::UniformExpectimax(10);
+		WRB_Chess::UniformExpectimax* eng = new WRB_Chess::UniformExpectimax(10, 100000);
 		return new WRB_Bot::Inference(eng); 
 	};
 	string getName() { return "UniformExpectimax"; };
@@ -194,7 +194,7 @@ class ExpectimaxConst : public BotConstructor
 {
 	BotBase* createBot() 
 	{ 
-		WRB_Chess::Expectimax* eng = new WRB_Chess::Expectimax(10);
+		WRB_Chess::Expectimax* eng = new WRB_Chess::Expectimax(10, 100000);
 		return new WRB_Bot::Inference(eng); 
 	};
 	string getName() { return "Expectimax"; };
@@ -212,7 +212,7 @@ class ShannonExpectimaxConst : public BotConstructor
 {
 	BotBase* createBot() 
 	{ 
-		WRB_Chess::ShannonExpectimax* eng = new WRB_Chess::ShannonExpectimax();
+		WRB_Chess::ShannonExpectimax* eng = new WRB_Chess::ShannonExpectimax(100000);
 		return new WRB_Bot::Inference(eng); 
 	};
 	string getName() { return "S_Expectimax"; };
@@ -229,7 +229,7 @@ class MonteShannonExpectimaxConst : public BotConstructor
 {
 	BotBase* createBot() 
 	{ 
-		WRB_Chess::MonteShannonExpectimax* eng = new WRB_Chess::MonteShannonExpectimax(10,10);
+		WRB_Chess::MonteShannonExpectimax* eng = new WRB_Chess::MonteShannonExpectimax(10,10, 100000);
 		return new WRB_Bot::Inference(eng); 
 	};
 	string getName() { return "MS_Expectimax"; };
@@ -246,7 +246,7 @@ class ExpectimaxMPOldConst : public BotConstructor
 {
 	BotBase* createBot() 
 	{ 
-		WRB_Chess::Expectimax* eng = new WRB_Chess::Expectimax(10);
+		WRB_Chess::Expectimax* eng = new WRB_Chess::Expectimax(10, 100000);
 		return new WRB_Bot::Inference(eng, new WRB_Chess::OldMoveProbability()); 
 	};
 	string getName() { return "Expectimax:MPO"; };
@@ -261,7 +261,7 @@ class ShannonExpectimaxMPOldConst : public BotConstructor
 {
 	BotBase* createBot() 
 	{ 
-		WRB_Chess::ShannonExpectimax* eng = new WRB_Chess::ShannonExpectimax();
+		WRB_Chess::ShannonExpectimax* eng = new WRB_Chess::ShannonExpectimax(100000);
 		return new WRB_Bot::Inference(eng, new WRB_Chess::OldMoveProbability()); 
 	};
 	string getName() { return "S_Expectimax:MPO"; };
@@ -276,7 +276,7 @@ class MonteShannonExpectimaxMPOldConst : public BotConstructor
 {
 	BotBase* createBot() 
 	{ 
-		WRB_Chess::MonteShannonExpectimax* eng = new WRB_Chess::MonteShannonExpectimax(10,10);
+		WRB_Chess::MonteShannonExpectimax* eng = new WRB_Chess::MonteShannonExpectimax(10,10, 100000);
 		return new WRB_Bot::Inference(eng, new WRB_Chess::OldMoveProbability()); 
 	};
 	string getName() { return "MS_Expectimax:MPO"; };
@@ -294,7 +294,7 @@ class MonteShannon2ExpectimaxConst : public BotConstructor
 {
 	BotBase* createBot() 
 	{ 
-		WRB_Chess::MonteShannon2Expectimax* eng = new WRB_Chess::MonteShannon2Expectimax(10,10);
+		WRB_Chess::MonteShannon2Expectimax* eng = new WRB_Chess::MonteShannon2Expectimax(10,10, 100000);
 		return new WRB_Bot::Inference(eng); 
 	};
 	string getName() { return "MS2_Expectimax"; };
@@ -309,7 +309,7 @@ class MonteShannon2ExpectimaxMPOldConst : public BotConstructor
 {
 	BotBase* createBot() 
 	{ 
-		WRB_Chess::MonteShannon2Expectimax* eng = new WRB_Chess::MonteShannon2Expectimax(10,10);
+		WRB_Chess::MonteShannon2Expectimax* eng = new WRB_Chess::MonteShannon2Expectimax(10,10, 100000);
 		return new WRB_Bot::Inference(eng, new WRB_Chess::OldMoveProbability()); 
 	};
 	string getName() { return "MS2_Expectimax:MPO"; };
@@ -326,7 +326,7 @@ class Shannon2ExpectimaxConst : public BotConstructor
 {
 	BotBase* createBot() 
 	{ 
-		WRB_Chess::Shannon2Expectimax* eng = new WRB_Chess::Shannon2Expectimax();
+		WRB_Chess::Shannon2Expectimax* eng = new WRB_Chess::Shannon2Expectimax(100000);
 		return new WRB_Bot::Inference(eng); 
 	};
 	string getName() { return "S2_Expectimax"; };
@@ -341,7 +341,7 @@ class Shannon2ExpectimaxMPOldConst : public BotConstructor
 {
 	BotBase* createBot() 
 	{ 
-		WRB_Chess::Shannon2Expectimax* eng = new WRB_Chess::Shannon2Expectimax();
+		WRB_Chess::Shannon2Expectimax* eng = new WRB_Chess::Shannon2Expectimax(100000);
 		return new WRB_Bot::Inference(eng, new WRB_Chess::OldMoveProbability()); 
 	};
 	string getName() { return "S2_Expectimax:MPO"; };

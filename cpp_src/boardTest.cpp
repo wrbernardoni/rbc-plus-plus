@@ -3,7 +3,9 @@
 #include <bitset>
 
 #include <cstdlib> 
-#include <ctime> 
+#include <ctime>
+
+#include "utilities/RollingMap.h"
 
 using namespace std;
 
@@ -79,9 +81,12 @@ int main()
 	cout << "Board Hash: " << hash(brdCpy) << endl;
 
 	int it = 10000;
+
+	WRB_std::RollingMap<WRB_Chess::Bitboard, bool, WRB_Chess::BoardHash> rMap(10);
 	cout << "Let's zoom " << it << " iterations!" << endl;
 	for (int i = 0; i < it; i++)
 	{
+		rMap[brdCpy] = true;
 		WRB_Chess::Bitboard pB = brdCpy;
 		WRB_Chess::Color c = (WRB_Chess::Color)(i % 2);
 
@@ -113,6 +118,8 @@ int main()
 			}
 			break;
 		}
+
+		cout << "Rolling map size: " << rMap.size() << endl;
 	}
 
 	cout << "After " << it << " iterations:" << endl;
@@ -120,4 +127,6 @@ int main()
 	cout << (brdCpy.Pieces(WRB_Chess::Color::White) ^ brdCpy.Pieces(WRB_Chess::Color::Black)) << endl;
 	cout << (brdCpy.Pawns() ^ brdCpy.Bishops() ^ brdCpy.Rooks() ^ brdCpy.Knights() ^ brdCpy.Queens() ^ brdCpy.Kings()) << endl;
 	cout << hash(brdCpy) << endl;
+
+	cout << "Rolling map size: " << rMap.size() << endl;
 }

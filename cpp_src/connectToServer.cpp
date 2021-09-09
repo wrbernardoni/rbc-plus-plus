@@ -48,7 +48,7 @@ void PlayGame(httplib::Client* cli, std::string server_url, int invite, std::str
 		WRB_Chess::RemoteGame game(cli, server_url, gameID, user, pass);
 	
 		cout << "Game instantiated" << endl;
-		WRB_Chess::Expectimax engine(10);
+		WRB_Chess::Expectimax engine(10, 100000);
 		WRB_Bot::Inference bot(&engine);
 	
 		WRB_Chess::Color mColor = game.getColor();

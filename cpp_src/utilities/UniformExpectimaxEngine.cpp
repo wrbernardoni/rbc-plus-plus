@@ -27,7 +27,7 @@ WRB_Chess::Move WRB_Chess::UniformExpectimax::RecommendMove(const WRB_Chess::Inf
 			WRB_Chess::Bitboard eBrd = (*iter);
 			eBrd.ApplyMove(mvs[i]);
 
-			if (scores.count(eBrd) == 0)
+			if (!scores.contains(eBrd))
 			{
 				scores[eBrd] = -1.0 * EvaluatePosition(eBrd, OPPOSITE_COLOR(c));
 			}
@@ -62,8 +62,6 @@ WRB_Chess::Move WRB_Chess::UniformExpectimax::RecommendMove(const WRB_Chess::Inf
 
 std::pair<short, std::unordered_map<WRB_Chess::Bitboard, WRB_Chess::Move, WRB_Chess::BoardHash>> WRB_Chess::UniformExpectimax::RecommendScanMovePolicy(const WRB_Chess::InformationSet& brds, WRB_Chess::Color c)
 {
-	scores.clear();
-
 	if (brds.boards.size() == 0)
 		return std::pair<short, std::unordered_map<WRB_Chess::Bitboard, WRB_Chess::Move, WRB_Chess::BoardHash>>();
 
@@ -77,7 +75,7 @@ std::pair<short, std::unordered_map<WRB_Chess::Bitboard, WRB_Chess::Move, WRB_Ch
 		{
 			WRB_Chess::Bitboard eBrd = (*it);
 			eBrd.ApplyMove(mvs[i]);
-			if (scores.count(eBrd) == 0)
+			if (scores.contains(eBrd))
 			{
 				scores[eBrd] = -1.0 * EvaluatePosition(eBrd, OPPOSITE_COLOR(c));
 			}
