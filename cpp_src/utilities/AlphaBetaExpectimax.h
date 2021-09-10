@@ -1,0 +1,213 @@
+#ifndef WRB_ENGINE_ALPHA_BETA_EXPECTI_H_
+#define WRB_ENGINE_ALPHA_BETA_EXPECTI_H_
+
+#include "ExpectimaxEngineMT.h"
+
+#include <iostream>
+#include <limits>
+#include <algorithm>
+
+namespace WRB_Chess
+{
+	class AlphaBetaExpectimax : public ExpectimaxMT
+	{
+	private:
+		//unsigned int playoutsPerEval;
+		unsigned int depth;
+		unsigned int saveDepth;
+		int visitedBoards;
+		int savedBoards;
+
+		double Heuristic(const WRB_Chess::Bitboard& b, WRB_Chess::Color c)
+		{
+			double score = 0.0;
+			score += 200.0 * ((int)b.Pieces(c, WRB_Chess::Piece::King).count() - (int)b.Pieces(OPPOSITE_COLOR(c), WRB_Chess::Piece::King).count());
+			score += 9.0 * ((int)b.Pieces(c, WRB_Chess::Piece::Queen).count() - (int)b.Pieces(OPPOSITE_COLOR(c), WRB_Chess::Piece::Queen).count());
+			score += 5.0 * ((int)b.Pieces(c, WRB_Chess::Piece::Rook).count() - (int)b.Pieces(OPPOSITE_COLOR(c), WRB_Chess::Piece::Rook).count());
+			score += 3.0 * ((int)b.Pieces(c, WRB_Chess::Piece::Bishop).count() - (int)b.Pieces(OPPOSITE_COLOR(c), WRB_Chess::Piece::Bishop).count());
+			score += 3.0 * ((int)b.Pieces(c, WRB_Chess::Piece::Knight).count() - (int)b.Pieces(OPPOSITE_COLOR(c), WRB_Chess::Piece::Knight).count());
+			score += 1.0 * ((int)b.Pieces(c, WRB_Chess::Piece::Pawn).count() - (int)b.Pieces(OPPOSITE_COLOR(c), WRB_Chess::Piece::Pawn).count());
+			
+			auto mob1 = b.AvailableMoves(c);
+			int tM1 = 0;
+
+			std::unordered_set<WRB_Chess::Move, WRB_Chess::MoveHash> uniqueMoves1;
+			for (int i = 0; i < mob1.size(); i++)
+			{
+				WRB_Chess::Move taken = b.RectifyMove(mob1[i]);
+				if (uniqueMoves1.count(taken) == 0)
+				{
+					uniqueMoves1.emplace(taken);
+					WRB_Chess::Bitboard tB = b;
+					tB.ApplyMove(taken);
+					if (tB.Pieces(c, WRB_Chess::Piece::King) != 0)
+					{
+						bool good = true;
+						short kingSq = (*WRB_Chess::MaskToSquares(tB.Pieces(c, WRB_Chess::Piece::King)).begin());
+						auto aM = tB.Attacks(OPPOSITE_COLOR(c), kingSq);
+						if (aM.size() == 0)
+						{
+							tM1++;
+						}
+					}
+				}
+			}
+
+			auto mob2 = b.AvailableMoves(OPPOSITE_COLOR(c));
+			int tM2 = 0;
+
+			std::unordered_set<WRB_Chess::Move, WRB_Chess::MoveHash> uniqueMoves2;
+			for (int i = 0; i < mob2.size(); i++)
+			{
+				WRB_Chess::Move taken = b.RectifyMove(mob2[i]);
+				if (uniqueMoves2.count(taken) == 0)
+				{
+					uniqueMoves2.emplace(taken);
+					WRB_Chess::Bitboard tB = b;
+					tB.ApplyMove(taken);
+					if (tB.Pieces(OPPOSITE_COLOR(c), WRB_Chess::Piece::King) != 0)
+					{
+						short kingSq = (*WRB_Chess::MaskToSquares(tB.Pieces(OPPOSITE_COLOR(c), WRB_Chess::Piece::King)).begin());
+						auto aM = tB.Attacks(c, kingSq);
+						if (aM.size() == 0)
+						{
+							tM2++;
+						}
+					}
+				}
+			}
+
+			score += 0.1 * (tM1 - tM2);
+
+			return score;
+		}
+
+		// Returns score from the perspective of white
+		double AlphaBeta(const WRB_Chess::Bitboard& b, unsigned int d, double alpha, double beta, WRB_Chess::Color toMove, WRB_Chess::Color c)
+		{
+			if (scores.contains(b))
+			{
+				// savedBoards++;
+				return scores[b];
+			}
+			else if (!b.KingsAlive())
+			{
+				// Terminal node
+				if (b.Pieces(WRB_Chess::Color::White, WRB_Chess::Piece::King) == 0)
+				{
+					return -1000;
+				}
+				else
+				{
+					return 1000;
+				}
+			}
+			else if (d == 0)
+			{
+				// Heuristic
+				if (toMove == WRB_Chess::Color::White)
+					return Heuristic(b, toMove);
+				else
+					return -Heuristic(b, toMove);
+			}
+
+			// visitedBoards++;
+			// std::cout << "vb " << visitedBoards << std::endl;
+			// std::cout << "d:" << d << " a:" << alpha << " b: " << beta << std::endl;
+
+			if (toMove == WRB_Chess::Color::White)
+			{
+				// Maximizing
+				double value = -std::numeric_limits<double>::infinity();
+
+				std::vector<WRB_Chess::Move> mvs = b.AvailableMoves(toMove);
+				std::random_shuffle(mvs.begin(), mvs.end());
+				bool good = true;
+				for (int i = mvs.size() - 1; i >= 0; i--)
+				{
+					WRB_Chess::Bitboard tB = b;
+					tB.ApplyMove(mvs[i]);
+					double nV = AlphaBeta(tB, d - 1, alpha, beta, OPPOSITE_COLOR(toMove), c);
+					if (nV > value)
+						value = nV;
+					if (value >= beta)
+					{
+						good = false;
+						break;
+					}
+					if (value > alpha)
+						alpha = value;
+				}
+
+				if (good && (d >= saveDepth))
+				{
+					// std::cout << "\tsv" << std::endl;
+					scores[b] = value;
+				}
+
+				// std::cout << "\tval:" << value << std::endl;
+				return value;
+			}
+			else
+			{
+				// Minimizing
+				double value = std::numeric_limits<double>::infinity();
+
+				std::vector<WRB_Chess::Move> mvs = b.AvailableMoves(toMove);
+				std::random_shuffle(mvs.begin(), mvs.end());
+				bool good = true;
+				for (int i = mvs.size() - 1; i >= 0; i--)
+				{
+					WRB_Chess::Bitboard tB = b;
+					tB.ApplyMove(mvs[i]);
+					double nV = AlphaBeta(tB, d - 1, alpha, beta, OPPOSITE_COLOR(toMove), c);
+					if (nV < value)
+						value = nV;
+					if (value <= alpha)
+					{
+						good = false;
+						break;
+					}
+					if (value < beta)
+						beta = value;
+				}
+
+				if (good && (d >= saveDepth))
+				{
+					// std::cout << "\tsv" << std::endl;
+					if (c == WRB_Chess::Color::Black)
+						scores[b] = -value;
+					else
+						scores[b] = value;
+				}
+
+				// std::cout << "\tval:" << value << std::endl;
+				return value;
+			}
+		}
+	public:
+		AlphaBetaExpectimax(unsigned int ppE, unsigned int d, unsigned int sD, size_t ns, int nThreads) : ExpectimaxMT(ppE, ns, nThreads) 
+		{
+			depth = d;
+			saveDepth = sD;
+		};
+		virtual double EvaluatePosition(const WRB_Chess::Bitboard& b, WRB_Chess::Color c)
+		{
+			if (scores.contains(b))
+				return scores[b];
+
+			// visitedBoards = 0;
+			// savedBoards = 0;
+			double sc = AlphaBeta(b, depth, -std::numeric_limits<double>::infinity(), std::numeric_limits<double>::infinity(), c, c);
+			// std::cout << "vb " << visitedBoards << " | sb " << savedBoards << std::endl;
+			if (c == WRB_Chess::Color::Black)
+				sc = -sc;
+
+			scores[b] = sc;
+
+			return sc;
+		};
+	};
+};
+
+#endif

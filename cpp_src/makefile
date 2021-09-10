@@ -69,7 +69,7 @@ ReconUtilities : BuildPath build/recon/LocalGame.o build/recon/RemoteGame.o
 build/recon/%.o : reconUtils/%.cpp BuildPath
 	$(CC) $(CFLAGS) -o $@ -c $< $(INCLUDES) $(LDFLAGS)
 
-Utilities : BuildPath build/utilities/BoardManager.o build/utilities/EngineBase.o build/utilities/RandomEngine.o build/utilities/MinBoardsScanEngine.o build/utilities/PureMonteEvaluator.o build/utilities/UniformExpectimaxEngine.o build/utilities/ExpectimaxEngine.o
+Utilities : BuildPath build/utilities/BoardManager.o build/utilities/EngineBase.o build/utilities/RandomEngine.o build/utilities/MinBoardsScanEngine.o build/utilities/PureMonteEvaluator.o build/utilities/UniformExpectimaxEngine.o build/utilities/ExpectimaxEngine.o build/utilities/ExpectimaxEngineMT.o
 #	$(CC) $(CFLAGS) $(INCLUDES) -o build/Utilities.o -c utilities/*.cpp
 
 build/utilities/%.o : utilities/%.cpp BuildPath

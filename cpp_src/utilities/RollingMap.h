@@ -41,6 +41,7 @@ namespace WRB_std
 		size_t maxSize;
 
 		std::mutex listMutex;
+		std::mutex mapMutex;
 
 		RollingMap_Utils::RMNode<Key>* pushNode(const Key key)
 		{
@@ -129,6 +130,7 @@ namespace WRB_std
 
 		Value& operator[](const Key& key)
 		{
+			std::lock_guard<std::mutex> guard(mapMutex);
 			if (map.count(key) != 0)
 			{
 				moveFront(map[key].ptr);

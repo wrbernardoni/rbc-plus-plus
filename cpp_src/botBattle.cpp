@@ -5,6 +5,7 @@
 #include "utilities/MinBoardsScanEngine.h"
 #include "utilities/ExpectimaxEngine.h"
 #include "utilities/MonteShannon2Expectimax.h"
+#include "utilities/AlphaBetaExpectimax.h"
 
 #include <iostream>
 
@@ -15,8 +16,8 @@ int main()
 	WRB_Chess::BoardHash::Init();
 
 	WRB_Chess::LocalGame game(900.0);
-	WRB_Chess::MonteShannon2Expectimax wEngine(5, 10, 100000);
-	WRB_Chess::MonteShannon2Expectimax bEngine(5, 10, 100000);
+	WRB_Chess::AlphaBetaExpectimax wEngine(5, 2, 1, 1000000, 6);
+	WRB_Chess::AlphaBetaExpectimax bEngine(5, 2, 1, 1000000, 6);
 	WRB_Bot::Inference whiteBot(&wEngine);
 	WRB_Bot::Inference blackBot(&bEngine);
 
