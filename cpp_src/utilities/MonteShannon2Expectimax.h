@@ -1,19 +1,19 @@
 #ifndef WRB_ENGINE_MONTE_SHANNON_2_EXPECTI_H_
 #define WRB_ENGINE_MONTE_SHANNON_2_EXPECTI_H_
 
-#include "ExpectimaxEngine.h"
+#include "ExpectimaxEngineMT.h"
 
 #include <iostream>
 
 namespace WRB_Chess
 {
-	class MonteShannon2Expectimax : public Expectimax
+	class MonteShannon2Expectimax : public ExpectimaxMT
 	{
 	private:
 		//unsigned int playoutsPerEval;
 		unsigned int depth;
 	public:
-		MonteShannon2Expectimax(unsigned int ppE, unsigned int d, size_t ns) : Expectimax(ppE, ns) 
+		MonteShannon2Expectimax(unsigned int ppE, unsigned int d, size_t ns, int nT) : ExpectimaxMT(ppE, ns, nT) 
 		{
 			depth = d;
 		};
@@ -22,7 +22,7 @@ namespace WRB_Chess
 			double scoreTot = 0;
 			double count = 0;
 
-			for (int i = 0; i < playoutsPerEval; i++)
+			for (int po = 0; po < playoutsPerEval; po++)
 			{
 				WRB_Chess::Bitboard gameBrd = b;
 
@@ -32,14 +32,19 @@ namespace WRB_Chess
 				{
 					it++;
 					auto mvs = gameBrd.AvailableMoves(activeColor);
-					short kingSq = (*WRB_Chess::MaskToSquares(gameBrd.Pieces(OPPOSITE_COLOR(activeColor), WRB_Chess::Piece::King)).begin());
-					auto kingAtt = gameBrd.Attacks(activeColor, kingSq);
-					for (int i = 0; i < kingAtt.size(); i++)
+					std::vector<short> kinSqs = WRB_Chess::MaskToSquares(gameBrd.Pieces(OPPOSITE_COLOR(activeColor), WRB_Chess::Piece::King));
+					if (kinSqs.size() == 0)
 					{
-						if (kingAtt[i].toSquare == kingSq)
+						break;
+					}
+					short kingSq = kinSqs[0];
+					auto kingAtt = gameBrd.Attacks(activeColor, kingSq);
+					for (int j = 0; j < kingAtt.size(); j++)
+					{
+						if (kingAtt[j].toSquare == kingSq)
 						{
 							WRB_Chess::Bitboard testB = gameBrd;
-							testB.ApplyMove(kingAtt[i]);
+							testB.ApplyMove(kingAtt[j]);
 							if (!testB.KingsAlive())
 							{
 								gameBrd = testB;
@@ -72,9 +77,9 @@ namespace WRB_Chess
 				int tM1 = 0;
 
 				std::unordered_set<WRB_Chess::Move, WRB_Chess::MoveHash> uniqueMoves1;
-				for (int i = 0; i < mob1.size(); i++)
+				for (int j = 0; j < mob1.size(); j++)
 				{
-					WRB_Chess::Move taken = gameBrd.RectifyMove(mob1[i]);
+					WRB_Chess::Move taken = gameBrd.RectifyMove(mob1[j]);
 					if (uniqueMoves1.count(taken) == 0)
 					{
 						uniqueMoves1.emplace(taken);
@@ -97,9 +102,9 @@ namespace WRB_Chess
 				int tM2 = 0;
 
 				std::unordered_set<WRB_Chess::Move, WRB_Chess::MoveHash> uniqueMoves2;
-				for (int i = 0; i < mob2.size(); i++)
+				for (int j = 0; j < mob2.size(); j++)
 				{
-					WRB_Chess::Move taken = gameBrd.RectifyMove(mob2[i]);
+					WRB_Chess::Move taken = gameBrd.RectifyMove(mob2[j]);
 					if (uniqueMoves2.count(taken) == 0)
 					{
 						uniqueMoves2.emplace(taken);

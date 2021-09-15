@@ -64,6 +64,14 @@ namespace WRB_Chess
 		~ExpectimaxMT()
 		{
 			end = true;
+			qMutex.lock();
+			while (taskQueue.size() > 0)
+			{
+				auto tsk = taskQueue.front();
+				taskQueue.pop();
+				delete tsk.sp;
+			};
+			qMutex.unlock();
 
 			for (int i = 0; i < threads.size(); i++)
 			{

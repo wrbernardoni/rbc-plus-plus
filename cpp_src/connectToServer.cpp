@@ -17,7 +17,7 @@
 #include "chess/board.h"
 #include "bots/inference.h"
 
-#include "utilities/ExpectimaxEngine.h"
+#include "utilities/ExpectimaxEngineMT.h"
 
 #include "../utilities/json.hpp"
 using json = nlohmann::json;
@@ -48,7 +48,7 @@ void PlayGame(httplib::Client* cli, std::string server_url, int invite, std::str
 		WRB_Chess::RemoteGame game(cli, server_url, gameID, user, pass);
 	
 		cout << "Game instantiated" << endl;
-		WRB_Chess::Expectimax engine(10, 100000);
+		WRB_Chess::ExpectimaxMT engine(10, 100000, 4);
 		WRB_Bot::Inference bot(&engine);
 	
 		WRB_Chess::Color mColor = game.getColor();
@@ -65,6 +65,7 @@ void PlayGame(httplib::Client* cli, std::string server_url, int invite, std::str
 		while(!game.is_over())
 		{
 			double timeLeft = game.get_seconds_left();
+			std::chrono::time_point<std::chrono::steady_clock> turnStart = std::chrono::steady_clock::now();
 			cout << endl << gameHead << "\t" << turnCount << " " << (mColor == 0? "White" : "Black") << " turn starts: " << timeLeft << " seconds remaining." << endl;
 
 			auto senseActions = game.sense_actions();
@@ -103,6 +104,8 @@ void PlayGame(httplib::Client* cli, std::string server_url, int invite, std::str
 			{
 				cout << " captured a piece at " << WRB_Chess::SquareNames[get<2>(mvResult)] << endl;
 			}
+
+			cout << ((std::chrono::duration<double>)(std::chrono::steady_clock::now() - turnStart)).count() << " seconds taken." << endl;
 
 			turnCount += 1;
 		}

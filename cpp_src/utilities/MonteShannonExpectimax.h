@@ -1,18 +1,18 @@
 #ifndef WRB_ENGINE_MONTE_SHANNON_EXPECTI_H_
 #define WRB_ENGINE_MONTE_SHANNON_EXPECTI_H_
 
-#include "ExpectimaxEngine.h"
+#include "ExpectimaxEngineMT.h"
 
 #include <iostream>
 
 namespace WRB_Chess
 {
-	class MonteShannonExpectimax : public Expectimax
+	class MonteShannonExpectimax : public ExpectimaxMT
 	{
 	private:
 		unsigned int depth;
 	public:
-		MonteShannonExpectimax(unsigned int ppE, unsigned int d, size_t ns) : Expectimax(ppE, ns) 
+		MonteShannonExpectimax(unsigned int ppE, unsigned int d, size_t ns, int nT) : ExpectimaxMT(ppE, ns, nT) 
 		{
 			depth = d;
 		};
@@ -21,7 +21,7 @@ namespace WRB_Chess
 			double scoreTot = 0;
 			double count = 0;
 
-			for (int i = 0; i < playoutsPerEval; i++)
+			for (int po = 0; po < playoutsPerEval; po++)
 			{
 				WRB_Chess::Bitboard gameBrd = b;
 

@@ -2,6 +2,7 @@
 #include <iostream>
 #include <unordered_map>
 
+
 void WRB_Chess::EMWorker__(bool* end, EngineBase* engine, std::queue<EMTask>* q, std::mutex* qMutex)
 {
 	while (!(*end))
@@ -34,12 +35,14 @@ std::pair<short, std::unordered_map<WRB_Chess::Bitboard, WRB_Chess::Move, WRB_Ch
 	if (brds.boards.size() == 0)
 		return std::pair<short, std::unordered_map<WRB_Chess::Bitboard, WRB_Chess::Move, WRB_Chess::BoardHash>>();
 
+
 	WRB_Chess::Bitboard firstB = *brds.boards.cbegin();
 	std::vector<WRB_Chess::Move> mvs = ((firstB)).AvailableMoves(c);
 
 	std::unordered_map<WRB_Chess::Bitboard, std::unordered_map<WRB_Chess::Move, WRB_Chess::Bitboard, WRB_Chess::MoveHash>, WRB_Chess::BoardHash> evals;
 	std::unordered_map<WRB_Chess::Bitboard, std::unordered_map<WRB_Chess::Move, double, WRB_Chess::MoveHash>, WRB_Chess::BoardHash> mvScore;
 	std::unordered_map<WRB_Chess::Bitboard, std::future<double>, WRB_Chess::BoardHash> futures;
+	std::unordered_map<WRB_Chess::Bitboard, double, WRB_Chess::BoardHash> scrs;
 
 	qMutex.lock();
 	for (auto it = brds.boards.begin(); it != brds.boards.end(); it++)
@@ -56,14 +59,12 @@ std::pair<short, std::unordered_map<WRB_Chess::Bitboard, WRB_Chess::Move, WRB_Ch
 				tsk.b = eBrd;
 				tsk.sp = new std::promise<double>;
 				tsk.c = c;
-				taskQueue.push(tsk);
 				futures[eBrd] = tsk.sp->get_future();
+				taskQueue.push(tsk);
 			}
 			else if (futures.count(eBrd) == 0)
 			{
-				std::promise<double> p;
-				futures[eBrd] = p.get_future();
-				p.set_value(scores[eBrd]);
+				scrs[eBrd] = scores[eBrd];
 			}
 		}
 	}
@@ -71,16 +72,23 @@ std::pair<short, std::unordered_map<WRB_Chess::Bitboard, WRB_Chess::Move, WRB_Ch
 
 	int nT = futures.size();
 	int nF = 0;
-	std::unordered_map<WRB_Chess::Bitboard, double, WRB_Chess::BoardHash> scrs;
+
+	// while (taskQueue.size() > 0)
+	// {
+	// 	std::cout << "\r" << taskQueue.size() << " tasks remaining               " << std::flush;
+	// 	std::this_thread::sleep_for(std::chrono::milliseconds(50));
+	// }
+	// std::cout << "\r" << 0 << " tasks remaining               " << std::flush;
+	// std::cout << std::endl;
 	for (auto it = futures.begin(); it != futures.end(); it++)
 	{
-		std::cout << "\r" << nF << "/" << nT << " boards evaluated" << std::flush;
+		// std::cout << "\r" << nF << "/" << nT << " boards evaluated" << std::flush;
 		scrs[it->first] = it->second.get();
+		scores[it->first] = scrs[it->first];
 		nF++;
 	}
 	std::cout << "\r" << nF << "/" << nT << " boards evaluated" << std::flush;
 
-	
 	for (auto it = brds.boards.begin(); it != brds.boards.end(); it++)
 	{
 		for (int i = 0; i < mvs.size(); i++)

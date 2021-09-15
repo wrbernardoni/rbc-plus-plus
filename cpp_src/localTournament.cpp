@@ -61,6 +61,7 @@ void PlayGame(httplib::Client* cli, int gameN, BotConstructor* whiteBot, BotCons
 		while(!game.is_over())
 		{
 			activeTurn = (short)game.turn();
+			std::chrono::time_point<std::chrono::steady_clock> turnStart = std::chrono::steady_clock::now();
 			cout << endl << endl;
 			cout << gameHead <<  turnCount << " " << (activeTurn == 0? "White: " + whiteBName : "Black: "  + blackBName) << " turn starts: " << game.get_seconds_left() << " seconds remaining." << endl;
 			cout << gameHead << "Board State" << endl;
@@ -98,6 +99,8 @@ void PlayGame(httplib::Client* cli, int gameN, BotConstructor* whiteBot, BotCons
 				cout << " captured a piece at " << WRB_Chess::SquareNames[get<2>(mvResult)] << endl;
 			}
 
+			cout << ((std::chrono::duration<double>)(std::chrono::steady_clock::now() - turnStart)).count() << " seconds taken." << endl;
+
 			game.end_turn();
 			turnCount += 0.5;
 		}
@@ -133,7 +136,9 @@ void PlayGame(httplib::Client* cli, int gameN, BotConstructor* whiteBot, BotCons
 
 		cli->Post("/", sendJ.dump(), "application/json");
 
+		cout << gameHead << "Deleting white bot." << endl;
 		whiteBot->destructBot(bots[0]);
+		cout << gameHead << "Deleting black bot." << endl;
 		blackBot->destructBot(bots[1]);
 	}
 	catch (...)
@@ -189,6 +194,7 @@ class UniformExpectimaxConst : public BotConstructor
 };
 
 #include "utilities/ExpectimaxEngine.h"
+#include "utilities/ExpectimaxEngineMT.h"
 
 class ExpectimaxConst : public BotConstructor
 {
@@ -205,6 +211,21 @@ class ExpectimaxConst : public BotConstructor
 	};
 };
 
+class ExpectimaxMTConst : public BotConstructor
+{
+	BotBase* createBot() 
+	{ 
+		WRB_Chess::ExpectimaxMT* eng = new WRB_Chess::ExpectimaxMT(10, 100000, 4);
+		return new WRB_Bot::Inference(eng); 
+	};
+	string getName() { return "Expectimax:MT"; };
+	void destructBot(BotBase* b) 
+	{ 
+		delete ((WRB_Bot::Inference*)b)->engine; 
+		delete b; 
+	};
+};
+
 
 #include "utilities/ShannonExpectimax.h"
 
@@ -212,7 +233,7 @@ class ShannonExpectimaxConst : public BotConstructor
 {
 	BotBase* createBot() 
 	{ 
-		WRB_Chess::ShannonExpectimax* eng = new WRB_Chess::ShannonExpectimax(100000);
+		WRB_Chess::ShannonExpectimax* eng = new WRB_Chess::ShannonExpectimax(100000,4);
 		return new WRB_Bot::Inference(eng); 
 	};
 	string getName() { return "S_Expectimax"; };
@@ -229,7 +250,7 @@ class MonteShannonExpectimaxConst : public BotConstructor
 {
 	BotBase* createBot() 
 	{ 
-		WRB_Chess::MonteShannonExpectimax* eng = new WRB_Chess::MonteShannonExpectimax(10,10, 100000);
+		WRB_Chess::MonteShannonExpectimax* eng = new WRB_Chess::MonteShannonExpectimax(10,10, 100000,4);
 		return new WRB_Bot::Inference(eng); 
 	};
 	string getName() { return "MS_Expectimax"; };
@@ -257,11 +278,29 @@ class ExpectimaxMPOldConst : public BotConstructor
 	};
 };
 
+#include "utilities/MoveProbabilityOld.h"
+
+class ExpectimaxMPOldMTConst : public BotConstructor
+{
+	BotBase* createBot() 
+	{ 
+		WRB_Chess::ExpectimaxMT* eng = new WRB_Chess::ExpectimaxMT(10, 100000,4);
+		return new WRB_Bot::Inference(eng, new WRB_Chess::OldMoveProbability()); 
+	};
+	string getName() { return "Expectimax:MPO:MT"; };
+	void destructBot(BotBase* b) 
+	{ 
+		delete ((WRB_Bot::Inference*)b)->engine; 
+		delete b; 
+	};
+};
+
+
 class ShannonExpectimaxMPOldConst : public BotConstructor
 {
 	BotBase* createBot() 
 	{ 
-		WRB_Chess::ShannonExpectimax* eng = new WRB_Chess::ShannonExpectimax(100000);
+		WRB_Chess::ShannonExpectimax* eng = new WRB_Chess::ShannonExpectimax(100000,4);
 		return new WRB_Bot::Inference(eng, new WRB_Chess::OldMoveProbability()); 
 	};
 	string getName() { return "S_Expectimax:MPO"; };
@@ -276,7 +315,7 @@ class MonteShannonExpectimaxMPOldConst : public BotConstructor
 {
 	BotBase* createBot() 
 	{ 
-		WRB_Chess::MonteShannonExpectimax* eng = new WRB_Chess::MonteShannonExpectimax(10,10, 100000);
+		WRB_Chess::MonteShannonExpectimax* eng = new WRB_Chess::MonteShannonExpectimax(10,10, 100000,4);
 		return new WRB_Bot::Inference(eng, new WRB_Chess::OldMoveProbability()); 
 	};
 	string getName() { return "MS_Expectimax:MPO"; };
@@ -294,7 +333,7 @@ class MonteShannon2ExpectimaxConst : public BotConstructor
 {
 	BotBase* createBot() 
 	{ 
-		WRB_Chess::MonteShannon2Expectimax* eng = new WRB_Chess::MonteShannon2Expectimax(10,10, 100000);
+		WRB_Chess::MonteShannon2Expectimax* eng = new WRB_Chess::MonteShannon2Expectimax(10,10, 100000,4);
 		return new WRB_Bot::Inference(eng); 
 	};
 	string getName() { return "MS2_Expectimax"; };
@@ -309,7 +348,7 @@ class MonteShannon2ExpectimaxMPOldConst : public BotConstructor
 {
 	BotBase* createBot() 
 	{ 
-		WRB_Chess::MonteShannon2Expectimax* eng = new WRB_Chess::MonteShannon2Expectimax(10,10, 100000);
+		WRB_Chess::MonteShannon2Expectimax* eng = new WRB_Chess::MonteShannon2Expectimax(10,10, 100000,4);
 		return new WRB_Bot::Inference(eng, new WRB_Chess::OldMoveProbability()); 
 	};
 	string getName() { return "MS2_Expectimax:MPO"; };
@@ -326,7 +365,7 @@ class Shannon2ExpectimaxConst : public BotConstructor
 {
 	BotBase* createBot() 
 	{ 
-		WRB_Chess::Shannon2Expectimax* eng = new WRB_Chess::Shannon2Expectimax(100000);
+		WRB_Chess::Shannon2Expectimax* eng = new WRB_Chess::Shannon2Expectimax(100000,4);
 		return new WRB_Bot::Inference(eng); 
 	};
 	string getName() { return "S2_Expectimax"; };
@@ -341,7 +380,7 @@ class Shannon2ExpectimaxMPOldConst : public BotConstructor
 {
 	BotBase* createBot() 
 	{ 
-		WRB_Chess::Shannon2Expectimax* eng = new WRB_Chess::Shannon2Expectimax(100000);
+		WRB_Chess::Shannon2Expectimax* eng = new WRB_Chess::Shannon2Expectimax(100000,4);
 		return new WRB_Bot::Inference(eng, new WRB_Chess::OldMoveProbability()); 
 	};
 	string getName() { return "S2_Expectimax:MPO"; };
@@ -381,8 +420,10 @@ int main(int argc, char* argv[])
 	bots.push_back(new RandomBotConst());
 	bots.push_back(new UniformExpectimaxConst());
 	//bots.push_back(new MinScanConst());
-	bots.push_back(new ExpectimaxConst());
-	bots.push_back(new ExpectimaxMPOldConst());
+	// bots.push_back(new ExpectimaxConst());
+	// bots.push_back(new ExpectimaxMPOldConst());
+	bots.push_back(new ExpectimaxMTConst());
+	bots.push_back(new ExpectimaxMPOldMTConst());
 	bots.push_back(new ShannonExpectimaxConst());
 	bots.push_back(new MonteShannonExpectimaxConst());
 	bots.push_back(new MonteShannonExpectimaxMPOldConst());

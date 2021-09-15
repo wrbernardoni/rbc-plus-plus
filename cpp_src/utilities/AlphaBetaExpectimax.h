@@ -9,6 +9,46 @@
 
 namespace WRB_Chess
 {
+	class ABMoveComparator
+	{
+	private:
+		WRB_std::RollingMap<WRB_Chess::Move, int, WRB_Chess::MoveHash>* killH;
+	public:
+		ABMoveComparator(WRB_std::RollingMap<WRB_Chess::Move, int, WRB_Chess::MoveHash>* m)
+		{
+			killH = m;
+		};
+
+		ABMoveComparator(const ABMoveComparator& o)
+		{
+			killH = o.killH;
+		};
+
+		ABMoveComparator& operator=(const ABMoveComparator& o)
+		{
+			killH = o.killH;
+
+			return *this;
+		};
+
+		bool operator() (const WRB_Chess::Move& i, const WRB_Chess::Move& j)
+		{
+			int iV = 0;
+			int jV = 0;
+			if (killH->contains(i))
+			{
+				iV = killH->unmovingRead(i);
+			}
+
+			if (killH->contains(j))
+			{
+				jV = killH->unmovingRead(j);
+			}
+
+			return iV > jV;
+		};
+	};
+
 	class AlphaBetaExpectimax : public ExpectimaxMT
 	{
 	private:
@@ -17,6 +57,7 @@ namespace WRB_Chess
 		unsigned int saveDepth;
 		int visitedBoards;
 		int savedBoards;
+		WRB_std::RollingMap<WRB_Chess::Move, int, WRB_Chess::MoveHash> killHeuristic;
 
 		double Heuristic(const WRB_Chess::Bitboard& b, WRB_Chess::Color c)
 		{
@@ -102,7 +143,7 @@ namespace WRB_Chess
 					return 1000;
 				}
 			}
-			else if (d == 0)
+			else if (d <= 0)
 			{
 				// Heuristic
 				if (toMove == WRB_Chess::Color::White)
@@ -115,23 +156,38 @@ namespace WRB_Chess
 			// std::cout << "vb " << visitedBoards << std::endl;
 			// std::cout << "d:" << d << " a:" << alpha << " b: " << beta << std::endl;
 
+			ABMoveComparator moveComp(&killHeuristic);
+
 			if (toMove == WRB_Chess::Color::White)
 			{
 				// Maximizing
 				double value = -std::numeric_limits<double>::infinity();
 
 				std::vector<WRB_Chess::Move> mvs = b.AvailableMoves(toMove);
-				std::random_shuffle(mvs.begin(), mvs.end());
+
+				killHeuristic.lock();
+				std::sort(mvs.begin(), mvs.end(), moveComp);
+				killHeuristic.unlock();
+
 				bool good = true;
-				for (int i = mvs.size() - 1; i >= 0; i--)
+				for (int i = 0; i < mvs.size(); i++)
 				{
 					WRB_Chess::Bitboard tB = b;
 					tB.ApplyMove(mvs[i]);
-					double nV = AlphaBeta(tB, d - 1, alpha, beta, OPPOSITE_COLOR(toMove), c);
+					double nV = AlphaBeta(tB, d - 1, alpha, beta, OPPOSITE_COLOR(toMove), c)/2;
 					if (nV > value)
 						value = nV;
 					if (value >= beta)
 					{
+						if (killHeuristic.contains(mvs[i]))
+						{
+							killHeuristic[mvs[i]]++;
+						}
+						else
+						{
+							killHeuristic[mvs[i]] = 1;
+						}
+
 						good = false;
 						break;
 					}
@@ -154,17 +210,30 @@ namespace WRB_Chess
 				double value = std::numeric_limits<double>::infinity();
 
 				std::vector<WRB_Chess::Move> mvs = b.AvailableMoves(toMove);
-				std::random_shuffle(mvs.begin(), mvs.end());
+
+				killHeuristic.lock();
+				std::sort(mvs.begin(), mvs.end(), moveComp);
+				killHeuristic.unlock();
+
 				bool good = true;
-				for (int i = mvs.size() - 1; i >= 0; i--)
+				for (int i = 0; i < mvs.size(); i++)
 				{
 					WRB_Chess::Bitboard tB = b;
 					tB.ApplyMove(mvs[i]);
-					double nV = AlphaBeta(tB, d - 1, alpha, beta, OPPOSITE_COLOR(toMove), c);
+					double nV = AlphaBeta(tB, d - 1, alpha, beta, OPPOSITE_COLOR(toMove), c)/2;
 					if (nV < value)
 						value = nV;
 					if (value <= alpha)
 					{
+						if (killHeuristic.contains(mvs[i]))
+						{
+							killHeuristic[mvs[i]]++;
+						}
+						else
+						{
+							killHeuristic[mvs[i]] = 1;
+						}
+
 						good = false;
 						break;
 					}
@@ -186,11 +255,12 @@ namespace WRB_Chess
 			}
 		}
 	public:
-		AlphaBetaExpectimax(unsigned int ppE, unsigned int d, unsigned int sD, size_t ns, int nThreads) : ExpectimaxMT(ppE, ns, nThreads) 
+		AlphaBetaExpectimax(unsigned int ppE, unsigned int d, unsigned int sD, size_t ns, int nThreads) : ExpectimaxMT(ppE, ns, nThreads), killHeuristic(10000)
 		{
 			depth = d;
 			saveDepth = sD;
 		};
+
 		virtual double EvaluatePosition(const WRB_Chess::Bitboard& b, WRB_Chess::Color c)
 		{
 			if (scores.contains(b))
@@ -202,8 +272,6 @@ namespace WRB_Chess
 			// std::cout << "vb " << visitedBoards << " | sb " << savedBoards << std::endl;
 			if (c == WRB_Chess::Color::Black)
 				sc = -sc;
-
-			scores[b] = sc;
 
 			return sc;
 		};

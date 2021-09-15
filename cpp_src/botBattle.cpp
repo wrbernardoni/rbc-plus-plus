@@ -15,9 +15,11 @@ int main()
 {
 	WRB_Chess::BoardHash::Init();
 
-	WRB_Chess::LocalGame game(900.0);
-	WRB_Chess::AlphaBetaExpectimax wEngine(5, 2, 1, 1000000, 6);
-	WRB_Chess::AlphaBetaExpectimax bEngine(5, 2, 1, 1000000, 6);
+	WRB_Chess::LocalGame game(900.0);//(90000000000.0);
+	// WRB_Chess::AlphaBetaExpectimax wEngine(5, 2, 2, 10000000, 6);
+	// WRB_Chess::AlphaBetaExpectimax bEngine(5, 2, 2, 10000000, 6);
+	WRB_Chess::MonteShannon2Expectimax wEngine(10,10, 100000, 4);
+	WRB_Chess::MonteShannon2Expectimax bEngine(10,10, 100000, 4);
 	WRB_Bot::Inference whiteBot(&wEngine);
 	WRB_Bot::Inference blackBot(&bEngine);
 
@@ -33,6 +35,7 @@ int main()
 	double turnCount = 0;
 	while(!game.is_over())
 	{
+		std::chrono::time_point<std::chrono::steady_clock> turnStart = std::chrono::steady_clock::now();
 		short activeTurn = (short)game.turn();
 		cout << turnCount << " " << (activeTurn == 0? "White" : "Black") << " turn starts: " << game.get_seconds_left() << " seconds remaining." << endl;
 		cout << WRB_Chess::GetPrintable(game.getBoard()) << endl;
@@ -69,6 +72,7 @@ int main()
 			cout << " captured a piece at " << WRB_Chess::SquareNames[get<2>(mvResult)] << endl;
 		}
 
+		cout << ((std::chrono::duration<double>)(std::chrono::steady_clock::now() - turnStart)).count() << " seconds taken." << endl;
 		cout << WRB_Chess::GetPrintable(game.getBoard()) << endl;
 		game.end_turn();
 		turnCount += 0.5;

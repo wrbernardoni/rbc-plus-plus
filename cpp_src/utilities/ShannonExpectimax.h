@@ -1,16 +1,16 @@
 #ifndef WRB_ENGINE_SHANNON_EXPECTI_H_
 #define WRB_ENGINE_SHANNON_EXPECTI_H_
 
-#include "ExpectimaxEngine.h"
+#include "ExpectimaxEngineMT.h"
 
 namespace WRB_Chess
 {
-	class ShannonExpectimax : public Expectimax
+	class ShannonExpectimax : public ExpectimaxMT
 	{
 	private:
 		unsigned int playoutsPerEval;
 	public:
-		ShannonExpectimax(size_t ns) : Expectimax(0, ns) {};
+		ShannonExpectimax(size_t ns, int nT) : ExpectimaxMT(0, ns, nT) {};
 		virtual double EvaluatePosition(const WRB_Chess::Bitboard& b, WRB_Chess::Color c)
 		{
 			double score = 0.0;

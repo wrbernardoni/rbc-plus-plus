@@ -93,6 +93,7 @@ std::pair<short, std::unordered_map<WRB_Chess::Bitboard, WRB_Chess::Move, WRB_Ch
 			}
 
 			mvScore[(*it)][mvs[i]] = scores[eBrd] * bP;
+			// mvScore[(*it)][mvs[i]] = -1.0 * EvaluatePosition(eBrd, OPPOSITE_COLOR(c)) * bP;
 		}
 	}
 

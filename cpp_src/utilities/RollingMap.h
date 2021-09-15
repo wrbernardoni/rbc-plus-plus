@@ -3,6 +3,7 @@
 
 #include <unordered_map>
 #include <mutex>
+#include <iostream>
 
 namespace WRB_std
 {
@@ -74,6 +75,8 @@ namespace WRB_std
 				}
 
 				RollingMap_Utils::RMNode<Key>* newTail = tail->prev;
+				if (newTail != NULL)
+					newTail->next = NULL;
 				delete tail;
 				tail = newTail;
 			}
@@ -82,6 +85,9 @@ namespace WRB_std
 		void moveFront(RollingMap_Utils::RMNode<Key>* node)
 		{
 			std::lock_guard<std::mutex> guard(listMutex);
+
+			if (node == head)
+				return;
 
 			if (node->prev != NULL)
 			{
@@ -94,18 +100,15 @@ namespace WRB_std
 			}
 
 
-			if (head != node)
+			if (node->next != NULL)
 			{
-				if (node->next != NULL)
-				{
-					node->next->prev = node->prev;
-				}
-
-				head->prev = node;
-				node->next = head;
-				node->prev = NULL;
-				head = node;
+				node->next->prev = node->prev;
 			}
+
+			head->prev = node;
+			node->next = head;
+			node->prev = NULL;
+			head = node;
 		};
 	public:
 		RollingMap(size_t n)
@@ -153,8 +156,29 @@ namespace WRB_std
 			}
 		};
 
+		void lock()
+		{
+			mapMutex.lock();
+		};
+
+		void unlock()
+		{
+			mapMutex.unlock();
+		};
+
+		// Only call this if they key is in the map!
+		Value& unmovingRead(const Key& key)
+		{
+			std::lock_guard<std::mutex> guard(mapMutex);
+			if (map.count(key) == 0)
+				throw "Key not found!";
+
+			return map[key].v;
+		}
+
 		size_t size()
 		{
+			std::lock_guard<std::mutex> guard(mapMutex);
 			return map.size();
 		};
 
@@ -165,6 +189,7 @@ namespace WRB_std
 
 		bool contains(const Key& key)
 		{
+			std::lock_guard<std::mutex> guard(mapMutex);
 			return (map.count(key) != 0);
 		};
 	};

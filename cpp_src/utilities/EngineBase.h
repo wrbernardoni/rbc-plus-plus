@@ -13,6 +13,8 @@ namespace WRB_Chess
 	class EngineBase
 	{
 	public:
+		virtual ~EngineBase() {};
+
 		virtual double EvaluatePosition(const WRB_Chess::Bitboard& b, WRB_Chess::Color c, double time)
 		{
 			return EvaluatePosition(b, c);
