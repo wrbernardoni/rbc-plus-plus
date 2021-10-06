@@ -22,6 +22,9 @@
 #include "../utilities/json.hpp"
 using json = nlohmann::json;
 
+#include <fstream>
+#include <chrono>
+#include <ctime>
 
 using namespace std;
 
@@ -124,7 +127,19 @@ void PlayGame(httplib::Client* cli, std::string server_url, int invite, std::str
 			cout << "That's a loss D;" << endl;
 		}
 
-		bot.handle_game_end(game.get_winner_color(), game.get_game_history());
+		WRB_Chess::GameHistory hist = game.get_game_history();
+		std::string fName = "./";
+		fName += to_string(gameID);
+		fName += (mColor == 0? "-White-" : "-Black-");
+		fName += opponent_name;
+		fName += ".json";
+		std::ofstream outputFile(fName);
+		outputFile << hist.j << std::endl;
+		outputFile.close();
+
+		cout << "Outputting game history to file " << fName << endl;
+
+		bot.handle_game_end(game.get_winner_color(), hist);
 	}
 	catch(const std::exception &e)
 	{

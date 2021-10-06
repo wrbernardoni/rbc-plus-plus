@@ -454,5 +454,29 @@ WRB_Chess::Color WRB_Chess::RemoteGame::turn()
 WRB_Chess::GameHistory WRB_Chess::RemoteGame::get_game_history()
 {
 	WRB_Chess::GameHistory g;
+
+	std::vector<short> senseAct;
+
+	std::string rt = "/api/games/" + std::to_string(gID) + "/game_history";
+	for (int i = 0; i <= NUM_RETRIES; i++)
+	{
+		if (auto res = cli->Get(rt.c_str())) {
+			auto rep = json::parse(res->body);
+			g.j = rep;
+			break;
+		} else {
+			std::cout << "Error in RemoteGame get_game_history" << std::endl;
+			
+			if (i == NUM_RETRIES)
+			{
+				
+				std::cout << "Throwing error " << res.error() << std::endl;
+				throw(res.error());
+			}
+			else
+				std::this_thread::sleep_for(RETRY_DELAY);
+		}
+	}
+
 	return g;
 }

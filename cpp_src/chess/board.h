@@ -6,6 +6,7 @@
 #include <bitset>
 #include <string>
 #include <ctime>
+#include <string>
 
 #include <iostream>
 
@@ -101,6 +102,10 @@ namespace WRB_Chess
 			Bitboard();
 			Bitboard(const Bitboard &bb); // Copy constructor
 			Bitboard(std::vector<std::pair<short, WRB_Chess::ColorPiece>>);
+			Bitboard(std::string); // Get bitboard from FEN
+
+			std::string fen();
+
 			Bitboard& operator=(const Bitboard& other);
 			bool operator==(const Bitboard& rhs) const;
 			inline bool operator!=(const Bitboard& rhs) const { return !(*this == rhs); }

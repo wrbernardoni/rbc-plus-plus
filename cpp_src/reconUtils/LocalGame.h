@@ -15,6 +15,7 @@ namespace WRB_Chess
 		WRB_Chess::Color currentTurn;
 		std::chrono::time_point<std::chrono::steady_clock> turnStart;
 		short opponentMvRes;
+		GameHistory hist;
 	public:
 		LocalGame(double seconds_per_player);
 		std::vector<short> sense_actions();

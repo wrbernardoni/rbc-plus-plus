@@ -6,6 +6,11 @@ WRB_Chess::LocalGame::LocalGame(double seconds_per_player)
 	this->blackSeconds = seconds_per_player;
 	currentTurn = WRB_Chess::Color::White;
 	opponentMvRes = -1;
+
+	hist.j["fens_after_move"]["false"] = json::array();
+	hist.j["fens_after_move"]["true"] = json::array();
+	hist.j["fens_before_move"]["false"] = json::array();
+	hist.j["fens_before_move"]["true"] = json::array();
 }
 
 std::vector<short> WRB_Chess::LocalGame::sense_actions()
@@ -51,8 +56,13 @@ std::tuple<WRB_Chess::Move, WRB_Chess::Move, short> WRB_Chess::LocalGame::move(W
 	std::tuple<WRB_Chess::Move, WRB_Chess::Move, short> mv;
 	bool capture;
 	short cS;
+	std::string turn = (currentTurn == WRB_Chess::White ? "true" : "false");
+	hist.j["fens_before_move"][turn].push_back(board.fen());
 	WRB_Chess::Move taken = board.ApplyMove(m, capture, cS);
+	hist.j["fens_after_move"][turn].push_back(board.fen());
+
 	opponentMvRes = cS;
+	
 	return std::tuple<WRB_Chess::Move, WRB_Chess::Move, short>(m, taken, cS);
 }
 
@@ -98,6 +108,8 @@ WRB_Chess::Color WRB_Chess::LocalGame::get_winner_color()
 
 WRB_Chess::GameHistory WRB_Chess::LocalGame::get_game_history()
 {
-	WRB_Chess::GameHistory g;
-	return g;
+	WRB_Chess::Color winner = get_winner_color();
+	if (winner != WRB_Chess::Color::NoColor)
+		hist.j["winner_color"] = (winner == WRB_Chess::Color::White);
+	return hist;
 }

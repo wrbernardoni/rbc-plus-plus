@@ -25,6 +25,8 @@ using namespace std;
 
 #include "reconUtils/BotBase.h"
 
+#include <ctime>
+
 class BotConstructor
 {
 public:
@@ -129,9 +131,31 @@ void PlayGame(httplib::Client* cli, int gameN, BotConstructor* whiteBot, BotCons
 	
 		cout << endl <<  gameHead << "Final Board State" << endl;
 		cout << WRB_Chess::GetPrintable(game.getBoard()) << endl;
+
+		WRB_Chess::GameHistory hist = game.get_game_history();
+		std::string fName = "";
+		fName += to_string(std::time(nullptr));
+		fName += "-";
+		fName += whiteBName;
+		fName += "-";
+		fName += blackBName;
+		fName += ".json";
+
+		std::fstream outputFile(fName.c_str(), fstream::out);
+		if (!outputFile.is_open())
+		{
+			cout << "Error opening file!\n!!!\n\n";
+		}
+		else
+		{
+			cout << "Outputting game history to file " << fName << endl;
+			outputFile << hist.j.dump() << std::endl;
+			outputFile.flush();
+			outputFile.close();
+		}		
 	
-		bots[0]->handle_game_end(game.get_winner_color(), game.get_game_history());
-		bots[1]->handle_game_end(game.get_winner_color(), game.get_game_history());
+		bots[0]->handle_game_end(game.get_winner_color(), hist);
+		bots[1]->handle_game_end(game.get_winner_color(), hist);
 
 
 		cli->Post("/", sendJ.dump(), "application/json");
@@ -218,7 +242,7 @@ class ExpectimaxMTConst : public BotConstructor
 		WRB_Chess::ExpectimaxMT* eng = new WRB_Chess::ExpectimaxMT(10, 100000, 4);
 		return new WRB_Bot::Inference(eng); 
 	};
-	string getName() { return "Expectimax:MT"; };
+	string getName() { return "Expectimax_MT"; };
 	void destructBot(BotBase* b) 
 	{ 
 		delete ((WRB_Bot::Inference*)b)->engine; 
@@ -270,7 +294,7 @@ class ExpectimaxMPOldConst : public BotConstructor
 		WRB_Chess::Expectimax* eng = new WRB_Chess::Expectimax(10, 100000);
 		return new WRB_Bot::Inference(eng, new WRB_Chess::OldMoveProbability()); 
 	};
-	string getName() { return "Expectimax:MPO"; };
+	string getName() { return "Expectimax_MPO"; };
 	void destructBot(BotBase* b) 
 	{ 
 		delete ((WRB_Bot::Inference*)b)->engine; 
@@ -287,7 +311,7 @@ class ExpectimaxMPOldMTConst : public BotConstructor
 		WRB_Chess::ExpectimaxMT* eng = new WRB_Chess::ExpectimaxMT(10, 100000,4);
 		return new WRB_Bot::Inference(eng, new WRB_Chess::OldMoveProbability()); 
 	};
-	string getName() { return "Expectimax:MPO:MT"; };
+	string getName() { return "Expectimax_MPO_MT"; };
 	void destructBot(BotBase* b) 
 	{ 
 		delete ((WRB_Bot::Inference*)b)->engine; 
@@ -303,7 +327,7 @@ class ShannonExpectimaxMPOldConst : public BotConstructor
 		WRB_Chess::ShannonExpectimax* eng = new WRB_Chess::ShannonExpectimax(100000,4);
 		return new WRB_Bot::Inference(eng, new WRB_Chess::OldMoveProbability()); 
 	};
-	string getName() { return "S_Expectimax:MPO"; };
+	string getName() { return "S_Expectimax_MPO"; };
 	void destructBot(BotBase* b) 
 	{ 
 		delete ((WRB_Bot::Inference*)b)->engine; 
@@ -318,7 +342,7 @@ class MonteShannonExpectimaxMPOldConst : public BotConstructor
 		WRB_Chess::MonteShannonExpectimax* eng = new WRB_Chess::MonteShannonExpectimax(10,10, 100000,4);
 		return new WRB_Bot::Inference(eng, new WRB_Chess::OldMoveProbability()); 
 	};
-	string getName() { return "MS_Expectimax:MPO"; };
+	string getName() { return "MS_Expectimax_MPO"; };
 	void destructBot(BotBase* b) 
 	{ 
 		delete ((WRB_Bot::Inference*)b)->engine; 
@@ -351,7 +375,7 @@ class MonteShannon2ExpectimaxMPOldConst : public BotConstructor
 		WRB_Chess::MonteShannon2Expectimax* eng = new WRB_Chess::MonteShannon2Expectimax(10,10, 100000,4);
 		return new WRB_Bot::Inference(eng, new WRB_Chess::OldMoveProbability()); 
 	};
-	string getName() { return "MS2_Expectimax:MPO"; };
+	string getName() { return "MS2_Expectimax_MPO"; };
 	void destructBot(BotBase* b) 
 	{ 
 		delete ((WRB_Bot::Inference*)b)->engine; 
@@ -383,7 +407,7 @@ class Shannon2ExpectimaxMPOldConst : public BotConstructor
 		WRB_Chess::Shannon2Expectimax* eng = new WRB_Chess::Shannon2Expectimax(100000,4);
 		return new WRB_Bot::Inference(eng, new WRB_Chess::OldMoveProbability()); 
 	};
-	string getName() { return "S2_Expectimax:MPO"; };
+	string getName() { return "S2_Expectimax_MPO"; };
 	void destructBot(BotBase* b) 
 	{ 
 		delete ((WRB_Bot::Inference*)b)->engine; 

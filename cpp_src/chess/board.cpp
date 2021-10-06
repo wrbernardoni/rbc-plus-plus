@@ -1,6 +1,7 @@
 #include "board.h"
 #include <cctype>
 #include <stdlib.h>
+#include <string>
 
 const char* WRB_Chess::SquareNames[] = {"A1", "B1", "C1", "D1", "E1", "F1", "G1", "H1",
 										"A2", "B2", "C2", "D2", "E2", "F2", "G2", "H2",
@@ -323,6 +324,146 @@ WRB_Chess::Bitboard& WRB_Chess::Bitboard::operator=(const Bitboard& bb)
 	this->epDefender = bb.epDefender;
 
 	return *this;
+}
+
+
+// TODO make fen conversion
+WRB_Chess::Bitboard::Bitboard(std::string fen)
+{
+	this->color_masks[WRB_Chess::Color::White] = 0b0;
+	this->color_masks[WRB_Chess::Color::Black] = 0b0;
+	this->piece_masks[WRB_Chess::Piece::Pawn] = 0b0;
+	this->piece_masks[WRB_Chess::Piece::Bishop] = 0b0;
+	this->piece_masks[WRB_Chess::Piece::Rook] = 0b0;
+	this->piece_masks[WRB_Chess::Piece::Knight] = 0b0;
+	this->piece_masks[WRB_Chess::Piece::Queen] = 0b0;	
+	this->piece_masks[WRB_Chess::Piece::King] = 0b0;
+	this->queensideCastle[WRB_Chess::Color::White] = false;
+	this->queensideCastle[WRB_Chess::Color::Black] = false;
+	this->kingsideCastle[WRB_Chess::Color::White] = false;
+	this->kingsideCastle[WRB_Chess::Color::Black] = false;
+	this->epSquare = -1;
+	this->epDefender = -1;
+
+	for (int i = 0; i < fen.size(); i++)
+	{
+		
+	}
+}
+
+std::string WRB_Chess::Bitboard::fen()
+{
+	std::string fen = "";
+	for (int i = 7; i >= 0; i--) // Rank
+	{
+		if (i != 7)
+			fen += "/";
+
+		int nullCounter = 0;
+		for (int j = 0; j < 8; j++) // File
+		{
+			WRB_Chess::ColorPiece pA = PieceAt(i*8 + j);
+
+			if (pA.piece == WRB_Chess::Piece::NoPiece)
+			{
+				nullCounter++;
+			}
+			else
+			{
+				if (nullCounter != 0)
+				{
+					fen += std::to_string(nullCounter);
+					nullCounter = 0;
+				}
+
+				char c = ' ';
+				switch (pA.piece)
+				{
+					case WRB_Chess::NoPiece:
+						c = '-';
+					break;
+
+					case WRB_Chess::Pawn:
+						c = 'p';
+					break;
+
+					case WRB_Chess::Bishop:
+						c = 'b';
+					break;
+
+					case WRB_Chess::Rook:
+						c = 'r';
+					break;
+
+					case WRB_Chess::Knight:
+						c = 'n';
+					break;
+
+					case WRB_Chess::Queen:
+						c = 'q';
+					break;
+
+					case WRB_Chess::King:
+						c = 'k';
+				}
+
+				if (pA.color == WRB_Chess::Color::White)
+				{
+					c = toupper(c);
+				}
+
+				fen += c;
+			} 
+		}
+
+		if (nullCounter != 0)
+		{
+			fen += std::to_string(nullCounter);
+			nullCounter = 0;
+		}
+	}
+
+	fen += " - ";
+
+	if (kingsideCastle[0])
+	{
+		fen += "K";
+	}
+
+	if (queensideCastle[0])
+	{
+		fen += "Q";
+	}
+
+	if (kingsideCastle[1])
+	{
+		fen += "k";
+	}
+
+	if (queensideCastle[1])
+	{
+		fen += "q";
+	}
+
+	if (!queensideCastle[0] && !queensideCastle[1] && !kingsideCastle[0] && !kingsideCastle[1])
+	{
+		fen += "-";
+	}
+
+	fen += " ";
+
+	if (epSquare != -1)
+	{
+		fen += WRB_Chess::squarenames[epSquare];
+	}
+	else
+	{
+		fen += "-";
+	}
+
+	fen += " 0 0";
+
+	return fen;
 }
 
 bool WRB_Chess::Bitboard::operator==(const Bitboard& rhs) const
