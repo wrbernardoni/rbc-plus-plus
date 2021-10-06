@@ -345,8 +345,243 @@ WRB_Chess::Bitboard::Bitboard(std::string fen)
 	this->epSquare = -1;
 	this->epDefender = -1;
 
+	int component = 0;
+	int rank = 7;
+	int file = 0;
+
+	int tempInt;
 	for (int i = 0; i < fen.size(); i++)
 	{
+		switch(component)
+		{
+		case 0: // Getting piece info
+			switch (fen[i])
+			{
+				case ' ':
+				component++;
+				break;
+
+				case '/':
+				rank -= 1;
+				file = 0;
+				break;
+
+				case 'r':
+				case 'R':
+					if (fen[i] == 'R')
+					{
+						this->color_masks[WRB_Chess::Color::White][8*rank + file] = true;
+					}
+					else
+					{
+						this->color_masks[WRB_Chess::Color::Black][8*rank + file] = true;
+					}
+
+					this->piece_masks[WRB_Chess::Piece::Rook][8*rank + file] = true;
+
+					file++;
+				break;
+
+				case 'p':
+				case 'P':
+					if (fen[i] == 'P')
+					{
+						this->color_masks[WRB_Chess::Color::White][8*rank + file] = true;
+					}
+					else
+					{
+						this->color_masks[WRB_Chess::Color::Black][8*rank + file] = true;
+					}
+
+					this->piece_masks[WRB_Chess::Piece::Pawn][8*rank + file] = true;
+
+					file++;
+				break;
+
+				case 'n':
+				case 'N':
+					if (fen[i] == 'N')
+					{
+						this->color_masks[WRB_Chess::Color::White][8*rank + file] = true;
+					}
+					else
+					{
+						this->color_masks[WRB_Chess::Color::Black][8*rank + file] = true;
+					}
+
+					this->piece_masks[WRB_Chess::Piece::Knight][8*rank + file] = true;
+
+					file++;
+				break;
+
+				case 'b':
+				case 'B':
+					if (fen[i] == 'B')
+					{
+						this->color_masks[WRB_Chess::Color::White][8*rank + file] = true;
+					}
+					else
+					{
+						this->color_masks[WRB_Chess::Color::Black][8*rank + file] = true;
+					}
+
+					this->piece_masks[WRB_Chess::Piece::Bishop][8*rank + file] = true;
+
+					file++;
+				break;
+
+				case 'q':
+				case 'Q':
+					if (fen[i] == 'Q')
+					{
+						this->color_masks[WRB_Chess::Color::White][8*rank + file] = true;
+					}
+					else
+					{
+						this->color_masks[WRB_Chess::Color::Black][8*rank + file] = true;
+					}
+
+					this->piece_masks[WRB_Chess::Piece::Queen][8*rank + file] = true;
+
+					file++;
+				break;
+
+				case 'k':
+				case 'K':
+					if (fen[i] == 'K')
+					{
+						this->color_masks[WRB_Chess::Color::White][8*rank + file] = true;
+					}
+					else
+					{
+						this->color_masks[WRB_Chess::Color::Black][8*rank + file] = true;
+					}
+
+					this->piece_masks[WRB_Chess::Piece::King][8*rank + file] = true;
+
+					file++;
+				break;
+
+				case '1':
+					file += 1;
+				break;
+
+				case '2':
+					file += 2;
+				break;
+
+				case '3':
+					file += 3;
+				break;
+
+				case '4':
+					file += 4;
+				break;
+
+				case '5':
+					file += 5;
+				break;
+
+				case '6':
+					file += 6;
+				break;
+
+				case '7':
+					file += 7;
+				break;
+
+				case '8':
+					file += 8;
+				break;
+
+			};
+		break;
+
+		case 1: // To move, ignore
+			i++;
+			component++;
+		break;
+
+		case 3: // Castling info
+			switch(fen[i])
+			{
+				case 'K':
+					this->kingsideCastle[WRB_Chess::Color::White] = true;
+				break;
+
+				case 'k':
+					this->kingsideCastle[WRB_Chess::Color::Black] = true;
+				break;
+
+				case 'Q':
+					this->queensideCastle[WRB_Chess::Color::White] = true;
+				break;
+
+				case 'q':
+					this->queensideCastle[WRB_Chess::Color::Black] = true;
+				break;
+
+				case ' ':
+					component++;
+				break;
+			}
+		break;
+
+		case 4: // En passant info
+			if (fen[i] != '-')
+			{
+				tempInt = 0;
+
+				switch(fen[i])
+				{
+					case 'a':
+						tempInt = 0;
+					break;
+
+					case 'b':
+						tempInt = 1;
+					break;
+
+					case 'c':
+						tempInt = 2;
+					break;
+
+					case 'd':
+						tempInt = 3;
+					break;
+
+					case 'e':
+						tempInt = 4;
+					break;
+
+					case 'f':
+						tempInt = 5;
+					break;
+
+					case 'g':
+						tempInt = 6;
+					break;
+
+					case 'h':
+						tempInt = 7;
+					break;
+				}
+
+				tempInt += (int)(fen[i+1] - '0') * 8;
+
+				this->epSquare = tempInt;
+
+				if (tempInt > 4 * 8)
+					this->epDefender = tempInt + 8;
+				else
+					this->epDefender = tempInt - 8;
+			}
+		break;
+
+		default: // End
+			return;
+
+		}
 		
 	}
 }

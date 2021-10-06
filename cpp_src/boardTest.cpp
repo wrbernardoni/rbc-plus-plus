@@ -128,5 +128,10 @@ int main()
 	cout << (brdCpy.Pawns() ^ brdCpy.Bishops() ^ brdCpy.Rooks() ^ brdCpy.Knights() ^ brdCpy.Queens() ^ brdCpy.Kings()) << endl;
 	cout << hash(brdCpy) << endl;
 
+	cout << "fen: " << brdCpy.fen() << endl;
+	WRB_Chess::Bitboard brdFromFen(brdCpy.fen());
+	cout << "fen of copy: " << brdFromFen.fen() << endl;
+	cout << "Copy success? " << (brdCpy == brdFromFen) << endl;
+
 	cout << "Rolling map size: " << rMap.size() << endl;
 }

@@ -20,7 +20,7 @@ endif
 INCLUDES = -I. -Ichess -IreconUtils -Ibots -Iutilities
 
 
-all: BuildPath BoardTest BotBattle HTTPTest Connect LocalTournament EndGames
+all: BuildPath BoardTest BotBattle HTTPTest Connect LocalTournament EndGames Replay
 
 BuildPath : 
 	mkdir -p build
@@ -43,7 +43,10 @@ EndGames : noMoreGames.cpp
 
 
 BoardTest : boardTest.o ChessUtilities
-	$(CC) $(CFLAGS) -o build/boardTest build/boardTest.o build/chess/*.o $(INCLUDES) $(LDFLAGS) 
+	$(CC) $(CFLAGS) -o build/boardTest build/boardTest.o build/chess/*.o $(INCLUDES) $(LDFLAGS)
+
+Replay : replayGame.o ChessUtilities
+	$(CC) $(CFLAGS) -o build/replay build/replayGame.o build/chess/*.o $(INCLUDES) $(LDFLAGS)
 
 BotBattle : botBattle.cpp ChessUtilities ReconUtilities Bots Utilities
 	$(CC) $(CFLAGS) -o build/botBattle  botBattle.cpp build/chess/*.o build/recon/*.o build/bots/*.o build/utilities/*.o $(INCLUDES) $(LDFLAGS)
@@ -78,6 +81,8 @@ build/utilities/%.o : utilities/%.cpp BuildPath
 boardTest.o: boardTest.cpp ChessUtilities
 	$(CC) $(CFLAGS) -o build/boardTest.o -c boardTest.cpp $(INCLUDES) $(LDFLAGS)
 
+replayGame.o: replayGame.cpp ChessUtilities
+	$(CC) $(CFLAGS) -o build/replayGame.o -c replayGame.cpp $(INCLUDES) $(LDFLAGS)
 
 
 clean:
