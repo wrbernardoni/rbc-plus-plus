@@ -40,6 +40,11 @@ int main(int argc, char* argv[])
 
 	WRB_Chess::Bitboard brd;
 
+	if (hist.contains("game_history"))
+		hist = hist["game_history"];
+
+	cout << hist.dump(4) << endl;
+
 	cout << "White to move 0-" << endl;
 	cout <<  WRB_Chess::GetPrintable(brd) << endl;
 
@@ -55,9 +60,9 @@ int main(int argc, char* argv[])
 			{
 				fen = hist["fens_after_move"]["true"][wc];
 				wc++;
-			}
 
-			cout << "Post white move " << wc << "-" << endl;
+				cout << "Post white move " << wc << "-" << fen << endl;
+			}
 		}
 		else
 		{
@@ -65,9 +70,9 @@ int main(int argc, char* argv[])
 			{
 				fen = hist["fens_after_move"]["false"][bc];
 				bc++;
-			}
 
-			cout << "Post black move " << bc << "-" << endl;
+				cout << "Post black move " << bc << "-" << fen << endl;
+			}
 		}
 
 		cout << WRB_Chess::GetPrintable(WRB_Chess::Bitboard(fen)) << endl;

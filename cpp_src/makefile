@@ -1,5 +1,5 @@
 CC = g++
-CFLAGS  = -o3 --std=c++11
+CFLAGS  = -o3 --std=c++17
 
 LDFLAGS=-lssl
 LDFLAGS+=-lcrypto
@@ -17,10 +17,10 @@ else
     CFLAGS += -pthread
 endif
 
-INCLUDES = -I. -Ichess -IreconUtils -Ibots -Iutilities
+INCLUDES = -I. -Ichess -IreconUtils -Ibots -Iutilities -IEigen
 
 
-all: BuildPath BoardTest BotBattle HTTPTest Connect LocalTournament EndGames Replay
+all: BuildPath BoardTest BotBattle HTTPTest Connect LocalTournament EndGames Replay TrainModel
 
 BuildPath : 
 	mkdir -p build
@@ -41,6 +41,8 @@ Connect : connectToServer.cpp ChessUtilities ReconUtilities Bots Utilities
 EndGames : noMoreGames.cpp
 	$(CC) $(CFLAGS) -o build/endGames noMoreGames.cpp $(INCLUDES) $(LDFLAGS) 
 
+TrainModel : trainModel.cpp ChessUtilities ReconUtilities Utilities
+	$(CC) $(CFLAGS) -o build/train trainModel.cpp build/chess/*.o build/recon/*.o build/utilities/*.o $(INCLUDES) $(LDFLAGS) 
 
 BoardTest : boardTest.o ChessUtilities
 	$(CC) $(CFLAGS) -o build/boardTest build/boardTest.o build/chess/*.o $(INCLUDES) $(LDFLAGS)
