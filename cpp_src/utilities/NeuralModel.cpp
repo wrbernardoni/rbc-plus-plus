@@ -191,7 +191,7 @@ double WRB_Chess::NeuralModel::train(const WRB_Chess::Bitboard& brd, bool toMove
 		oldModel.push_back(model[i]);
 		for (int j = 0; j < model[i].rows() - 1; j++)
 		{
-			model[i].row(j) = model[i].row(j) + lr * deltas[i+2](j,0) * inputs[i].unaryExpr(&sigmoid).transpose();
+			model[i].row(j) = model[i].row(j) - lr * deltas[i+2](j,0) * inputs[i].unaryExpr(&sigmoid).transpose();
 		}
 	}
 

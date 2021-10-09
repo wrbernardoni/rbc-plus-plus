@@ -256,7 +256,7 @@ int main(int argc, char* argv[])
 
 		cout << "Training model!" << endl;
 
-		double lr = 0.000001;
+		double lr = 0.0001;
 		double gamma = 0.8;
 
 		double cesaroMSE = 0.0;
