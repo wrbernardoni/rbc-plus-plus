@@ -111,7 +111,9 @@ namespace WRB_Chess
 			inline bool operator!=(const Bitboard& rhs) const { return !(*this == rhs); }
 			void clear();
 
-
+			inline short getEP() const { return epSquare; };
+			inline bool queenCastle(bool b) const { return queensideCastle[b];};
+			inline bool kingCastle(bool b) const { return kingsideCastle[b];};
 			inline std::bitset<64> Pieces(Color c) const { return color_masks[c]; };
 			inline std::bitset<64> Pieces(Color c, Piece p) const { return color_masks[c] & piece_masks[p];};
 			inline std::bitset<64> Pieces(ColorPiece p) const { return color_masks[p.color] & piece_masks[p.piece];};

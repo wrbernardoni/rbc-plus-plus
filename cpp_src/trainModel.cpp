@@ -19,6 +19,8 @@ using json = nlohmann::json;
 
 #include <filesystem>
 
+#include "../utilities/NeuralModel.h"
+
 struct GameData
 {
 	vector<WRB_Chess::Bitboard> boards; // Boards by half move
@@ -247,28 +249,80 @@ int main(int argc, char* argv[])
 	    cout << "Validation data loaded" << endl;
 	    cout << validData.size() << " games in dataset" << endl << endl;
 
+	    cout << "Generating new model" << endl;
+	    WRB_Chess::NeuralModel model;
+	    cout << "Model generated!" << endl << endl;
+
 
 		cout << "Training model!" << endl;
 
-		Eigen::MatrixXd m(2,2);
-		m(0,0) = 1;
-		m(0,1) = 1;
-		m(1,0) = 0;
-		m(1,1) = 1;
+		double lr = 0.000001;
+		double gamma = 0.8;
 
-		Eigen::MatrixXd v(1,2);
-		v(0,0) = 1;
-		v(0,1) = 3;
+		double cesaroMSE = 0.0;
+		double cesaroCount = 0.0;
+		for (int c = 0; c < 1000; c++)
+		{
+			double mseSum = 0.0;
+			double count = 0;
+			cout << "\nValidating, mse on test score: ";
+			cout.flush();
+			for (int i = 0; i < 10; i++)
+			{
+				int gC = rand() % testData.size();
+				double finalScore = 0.0;
+				if (testData[gC].victor)
+					finalScore = 1.0;
+				else
+					finalScore = -1.0;
 
-		Eigen::MatrixXd vT(2,1);
-		vT(0,0) = 1;
-		vT(1,0) = 3;
+				for (int j = testData[gC].boards.size() - 1; j >= 0; j--)
+				{
+					double score = model.runForward(testData[gC].boards[j], (j + 1) % 2);
+					mseSum += std::pow(finalScore - score,2);
+					count += 1;
+					finalScore *= gamma;
+				}
+			}
 
-		cout << m << endl;
-		cout << v << endl;
-		cout << vT << endl;
-		cout << v * m << endl;
-		cout << m * vT << endl;
+			cesaroCount += 1.0;
+			cesaroMSE += mseSum/count;
+
+			cout <<  cesaroMSE/cesaroCount << " (" << mseSum/count << ")" << endl;
+
+			for (int i = 0; i < 10; i ++)
+			{
+				cout << i << "/10 :";
+				int gameC = rand() & trainingData.size();
+
+				double finalScore = 0.0;
+				if (trainingData[gameC].victor)
+					finalScore = 1.0;
+				else
+					finalScore = -1.0;
+
+				double dS = 0.0;
+				double dC = 0.0;
+				for (int j = trainingData[gameC].boards.size() - 1; j >= 0; j--)
+				{
+					double delta = model.train(trainingData[gameC].boards[j], (j + 1) % 2, finalScore, lr);
+					dS += delta;
+					dC += 1.0;
+					//cout << delta << endl;
+					if (delta > 0)
+					{
+						cout << "Reducing LR: " << lr;
+						lr = lr * 0.9;
+						cout << "->" << lr << endl;
+					}
+					finalScore *= gamma;
+				}
+
+				cout << " avg. delta: " << dS/dC << endl;
+			}
+		}
+
+
 	}
 	else
 	{
