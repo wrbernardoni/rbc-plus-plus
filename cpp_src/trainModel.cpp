@@ -208,6 +208,8 @@ int main(int argc, char* argv[])
 		string dataPath = argv[2];
 		string modelPath = argv[3];
 
+		int batchN = 5; // TODO: Make this a command line arg
+
 		string trainingPath = dataPath + "/train/";
 		string testPath = dataPath + "/test/";
 		string validatePath = dataPath + "/validate/";
@@ -285,40 +287,61 @@ int main(int argc, char* argv[])
 				}
 			}
 
+			double oldCesaro = 100.0;
+
+			if (cesaroCount >= 1)
+				oldCesaro = cesaroMSE / cesaroCount;
+
 			cesaroCount += 1.0;
 			cesaroMSE += mseSum/count;
 
 			cout <<  cesaroMSE/cesaroCount << " (" << mseSum/count << ")" << endl;
 
+			if ((cesaroMSE/cesaroCount) > oldCesaro)
+			{
+				cout << "Reducing LR: " << lr;
+				lr = lr * 0.9;
+				cout << "->" << lr << endl;
+			}
+			
+
 			for (int i = 0; i < 10; i ++)
 			{
-				cout << i << "/10 :";
-				int gameC = rand() & trainingData.size();
-
-				double finalScore = 0.0;
-				if (trainingData[gameC].victor)
-					finalScore = 1.0;
-				else
-					finalScore = -1.0;
-
-				double dS = 0.0;
-				double dC = 0.0;
-				for (int j = trainingData[gameC].boards.size() - 1; j >= 0; j--)
+				cout << i << "/10 : ";
+				vector<WRB_Chess::Bitboard> brds;
+				vector<bool> toMove;
+				vector<double> scores;
+				
+				for (int j = 0; j < batchN; j++)
 				{
-					double delta = model.train(trainingData[gameC].boards[j], (j + 1) % 2, finalScore, lr);
-					dS += delta;
-					dC += 1.0;
-					//cout << delta << endl;
-					if (delta > 0)
-					{
-						cout << "Reducing LR: " << lr;
-						lr = lr * 0.9;
-						cout << "->" << lr << endl;
-					}
-					finalScore *= gamma;
-				}
+					int gameC = rand() & trainingData.size();
 
-				cout << " avg. delta: " << dS/dC << endl;
+					double finalScore = 0.0;
+					if (trainingData[gameC].victor)
+						finalScore = 1.0;
+					else
+						finalScore = -1.0;
+
+					double dS = 0.0;
+					double dC = 0.0;
+
+					
+					for (int j = trainingData[gameC].boards.size() - 1; j >= 0; j--)
+					{
+						brds.push_back(trainingData[gameC].boards[j]);
+						toMove.push_back((j + 1) % 2);
+						scores.push_back(finalScore);
+						
+						finalScore *= gamma;
+					}
+				}
+				
+				cout << brds.size() << " boards in batch : ";
+				cout.flush();
+
+				double delta = model.trainBatch(brds, toMove, scores, lr);
+				
+				cout << " batch delta: " << delta << endl;
 			}
 		}
 

@@ -15,6 +15,7 @@ namespace WRB_Chess
 		NeuralModel();
 		double runForward(const WRB_Chess::Bitboard&, bool);
 		double train(const WRB_Chess::Bitboard&, bool, double, double);
+		double trainBatch(std::vector<WRB_Chess::Bitboard>, std::vector<bool>, std::vector<double>, double);
 	};
 };
 

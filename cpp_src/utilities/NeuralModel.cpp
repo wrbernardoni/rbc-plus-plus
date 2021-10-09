@@ -145,7 +145,7 @@ double WRB_Chess::NeuralModel::runForward(const WRB_Chess::Bitboard& brd, bool t
 	return test(0,0);
 }
 
-#define DROPOUT_RATE 0.8
+#define DROPOUT_RATE 0.7
 
 double dropout(double w)
 {
@@ -201,6 +201,75 @@ double WRB_Chess::NeuralModel::train(const WRB_Chess::Bitboard& brd, bool toMove
 	{
 		model = oldModel;
 	}
+
+	return dErr;
+}
+
+double WRB_Chess::NeuralModel::trainBatch(std::vector<WRB_Chess::Bitboard> brd, std::vector<bool> toMove, std::vector<double> score, double lr)
+{
+	std::vector<std::vector<Eigen::MatrixXd>> deltasB;
+	std::vector<std::vector<Eigen::MatrixXd>> inputsB;
+
+	double sumErr = 0.0;
+	for (int b = 0; b < brd.size(); b++)
+	{
+		Eigen::MatrixXd inp = boardToVec(brd[b], toMove[b]);
+
+		std::vector<Eigen::MatrixXd> deltas;
+		std::vector<Eigen::MatrixXd> inputs;
+
+		for (int i = 0; i < model.size(); i++)
+		{
+			deltas.push_back(inp);
+			inp.conservativeResize(inp.rows() + 1, inp.cols());
+			inp.bottomLeftCorner(1,inp.cols()) = Eigen::MatrixXd::Constant(1,inp.cols(), 1.0);
+			inp = ((1.0 / DROPOUT_RATE) * inp).cwiseProduct(Eigen::MatrixXd::Random(inp.rows(), inp.cols()).unaryExpr(&dropout));
+			inputs.push_back(inp);
+			inp = model[i] * inp.unaryExpr(&sigmoid);
+		}
+		inputs.push_back(inp);
+		deltas.push_back(inp);
+		double outErr = score[b] - inp(0,0);
+		sumErr += std::pow(outErr,2);
+		deltas[deltas.size() - 1] = outErr * inputs[inputs.size() - 2].unaryExpr(&dsigmoid);
+
+		for (int i = deltas.size() - 2; i >= 1; i--)
+		{
+			deltas[i] = (model[i-1].transpose() * deltas[i]).cwiseProduct(inputs[i-1].unaryExpr(&dsigmoid));
+		}
+
+		deltasB.push_back(deltas);
+		inputsB.push_back(inputs);
+	}
+
+	std::vector<Eigen::MatrixXd> oldModel;
+	for (int i = 0; i < model.size(); i++)
+	{
+		oldModel.push_back(model[i]);
+		for (int j = 0; j < model[i].rows() - 1; j++)
+		{
+			for (int b = 0; b < brd.size(); b++)
+			{
+				model[i].row(j) = model[i].row(j) - (1.0/(double)brd.size())* lr * deltasB[b][i+2](j,0) * inputsB[b][i].unaryExpr(&sigmoid).transpose();
+			}
+		}
+	}
+
+	double eS = 0.0;
+	for (int b = 0; b < brd.size(); b++)
+	{
+		double postTrainScore = runForward(brd[b], toMove[b]);
+		eS += std::pow(score[b] - postTrainScore,2);
+	}
+	
+	double dErr = (eS - sumErr)/((double)brd.size());
+	
+	/*
+	if (dErr >= 0)
+	{
+		model = oldModel;
+	}
+	*/
 
 	return dErr;
 }
