@@ -125,9 +125,9 @@ std::pair<short, std::unordered_map<WRB_Chess::Bitboard, WRB_Chess::Move, WRB_Ch
 			}
 
 			// No need to evaluate partition if it doesn't discern anything 
-			if ((partition.size() < 2) && bestSense.size() != 0)
+			if ((partition.size() < 2) && (bestSense.size() != 0))
 				continue;
-	
+
 			double ES = 0.0;
 			double maxN = 0;
 			

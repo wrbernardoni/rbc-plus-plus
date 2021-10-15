@@ -18,6 +18,7 @@ using json = nlohmann::json;
 #include <Eigen/Dense>
 
 #include <filesystem>
+#include <ctime>
 
 #include "../utilities/NeuralModel.h"
 
@@ -83,6 +84,59 @@ GameData extractGameData(string fn)
 
 	return gData;
 };
+
+// Gamma is the decay of reward parameter
+#define GAMMA 0.8
+
+double trainingGoal(WRB_Chess::NeuralModel& model, WRB_Chess::Bitboard& b, bool toMove)
+{
+	if (!b.KingsAlive())
+	{
+		if (b.Pieces(WRB_Chess::Color::White, WRB_Chess::Piece::King) == 0)
+			return -1;
+		else if (b.Pieces(WRB_Chess::Color::Black, WRB_Chess::Piece::King) == 0)
+			return 1;
+	}
+
+	if (toMove)
+	{
+		// White = Maximize
+		double bestSuccessor = 0.0;
+		std::vector<WRB_Chess::Move> mvs = b.AvailableMoves((WRB_Chess::Color)toMove);
+		for (int i = 0; i < mvs.size(); i++)
+		{
+			WRB_Chess::Bitboard testB = b;
+			testB.ApplyMove(mvs[i]);
+			double tempScore = model.runForward(testB, !toMove);
+
+			if ((tempScore > bestSuccessor) || (i == 0))
+			{
+				bestSuccessor = tempScore;
+			}
+		}
+
+		return GAMMA * bestSuccessor;
+	}
+	else
+	{
+		// Black = Minimize
+		double bestSuccessor = 0.0;
+		std::vector<WRB_Chess::Move> mvs = b.AvailableMoves((WRB_Chess::Color)toMove);
+		for (int i = 0; i < mvs.size(); i++)
+		{
+			WRB_Chess::Bitboard testB = b;
+			testB.ApplyMove(mvs[i]);
+			double tempScore = model.runForward(testB, !toMove);
+
+			if ((tempScore < bestSuccessor) || (i == 0))
+			{
+				bestSuccessor = tempScore;
+			}
+		}
+
+		return GAMMA * bestSuccessor;
+	}
+}
 
 int main(int argc, char* argv[])
 {
@@ -199,9 +253,33 @@ int main(int argc, char* argv[])
 	}
 	else if (operation == "new" || operation == "N")
 	{
-		if (argc < 4)
+		if (argc < 3)
 		{
-			cout << "Missing parameters, must call it as train new (path to train/test/validate data) (path to store model)\n";
+			cout << "Missing parameters, must call it as train new (path to store model)\n";
+			return 1;
+		}
+
+		string modelPath = argv[2];
+
+		cout << "Generating new model" << endl;
+	    WRB_Chess::NeuralModel model;
+	    cout << "Model generated!" << endl << endl;
+
+	    string startTime = to_string(std::time(nullptr));
+
+	    string fn = modelPath;
+		fn += "/";
+		fn += startTime;
+		fn += ".model";
+		model.save(fn);
+
+		cout << "Saved model as " << fn << endl;
+	}
+	else if (operation == "train" || operation == "T")
+	{
+		if (argc < 6)
+		{
+			cout << "Missing parameters, must call it as train train (path to train/test/validate data) (path to store model) (path to model to train) (model name)\n";
 			return 1;
 		}
 
@@ -209,10 +287,17 @@ int main(int argc, char* argv[])
 		string modelPath = argv[3];
 
 		int batchN = 5; // TODO: Make this a command line arg
+		int saveEvery = 100; // TODO: Make this a command line
 
 		string trainingPath = dataPath + "/train/";
 		string testPath = dataPath + "/test/";
 		string validatePath = dataPath + "/validate/";
+
+		cout << "Loading model" << endl;
+	    WRB_Chess::NeuralModel model(argv[4]);
+	    cout << "Model loaded!" << endl << endl;
+
+	    string stemName = argv[5];
 
 		// Load training data
 		cout << "Loading training data" << endl;
@@ -251,10 +336,6 @@ int main(int argc, char* argv[])
 	    cout << "Validation data loaded" << endl;
 	    cout << validData.size() << " games in dataset" << endl << endl;
 
-	    cout << "Generating new model" << endl;
-	    WRB_Chess::NeuralModel model;
-	    cout << "Model generated!" << endl << endl;
-
 
 		cout << "Training model!" << endl;
 
@@ -263,7 +344,10 @@ int main(int argc, char* argv[])
 
 		double cesaroMSE = 0.0;
 		double cesaroCount = 0.0;
-		for (int c = 0; c < 1000; c++)
+		int epoch = -1;
+
+		int trainIt = 0;
+		while(true)
 		{
 			double mseSum = 0.0;
 			double count = 0;
@@ -272,20 +356,45 @@ int main(int argc, char* argv[])
 			for (int i = 0; i < 10; i++)
 			{
 				int gC = rand() % testData.size();
+
+				if (testData[gC].boards.size() == 0)
+					continue;
+
 				double finalScore = 0.0;
 				if (testData[gC].victor)
 					finalScore = 1.0;
 				else
 					finalScore = -1.0;
 
-				for (int j = testData[gC].boards.size() - 1; j >= 0; j--)
+				int j = testData[gC].boards.size() - 1;
+				mseSum += std::pow(finalScore - model.runForward(testData[gC].boards[j], (j + 1) % 2),2);
+
+				for (j = testData[gC].boards.size() - 2; j >= 0; j--)
 				{
 					double score = model.runForward(testData[gC].boards[j], (j + 1) % 2);
-					mseSum += std::pow(finalScore - score,2);
+					mseSum += std::pow(trainingGoal(model, testData[gC].boards[j], (j + 1) % 2) - score,2);
 					count += 1;
-					finalScore *= gamma;
 				}
 			}
+
+			if ((trainIt % saveEvery) == 0)
+			{
+				epoch++;
+				string fn = modelPath;
+				fn += "/";
+				fn += stemName;
+				fn += "-e";
+				fn += to_string(epoch);
+				fn += ".model";
+				model.save(fn);
+			}
+
+			string fn = modelPath;
+			fn += "/";
+			fn += stemName;
+			fn += "-eLatest.model";
+			model.save(fn);
+			
 
 			double oldCesaro = 100.0;
 
@@ -300,7 +409,7 @@ int main(int argc, char* argv[])
 			if ((cesaroMSE/cesaroCount) > oldCesaro)
 			{
 				cout << "Reducing LR: " << lr;
-				lr = lr * 0.9;
+				lr = lr * 0.99;
 				cout << "->" << lr << endl;
 			}
 			
@@ -308,13 +417,17 @@ int main(int argc, char* argv[])
 			for (int i = 0; i < 10; i ++)
 			{
 				cout << i << "/10 : ";
+				cout.flush();
 				vector<WRB_Chess::Bitboard> brds;
 				vector<bool> toMove;
 				vector<double> scores;
 				
 				for (int j = 0; j < batchN; j++)
 				{
-					int gameC = rand() & trainingData.size();
+					int gameC = rand() % trainingData.size();
+
+					if (trainingData[gameC].boards.size() == 0)
+						continue;
 
 					double finalScore = 0.0;
 					if (trainingData[gameC].victor)
@@ -322,17 +435,16 @@ int main(int argc, char* argv[])
 					else
 						finalScore = -1.0;
 
-					double dS = 0.0;
-					double dC = 0.0;
-
+					int k = trainingData[gameC].boards.size() - 1;
+					brds.push_back(trainingData[gameC].boards[k]);
+					toMove.push_back((k + 1) % 2);
+					scores.push_back(finalScore);
 					
-					for (int j = trainingData[gameC].boards.size() - 1; j >= 0; j--)
+					for (k = trainingData[gameC].boards.size() - 2; k >= 0; k--)
 					{
-						brds.push_back(trainingData[gameC].boards[j]);
-						toMove.push_back((j + 1) % 2);
-						scores.push_back(finalScore);
-						
-						finalScore *= gamma;
+						brds.push_back(trainingData[gameC].boards[k]);
+						toMove.push_back((k + 1) % 2);
+						scores.push_back(trainingGoal(model, trainingData[gameC].boards[k], (k + 1) % 2));
 					}
 				}
 				
@@ -343,6 +455,8 @@ int main(int argc, char* argv[])
 				
 				cout << " batch delta: " << delta << endl;
 			}
+
+			trainIt++;
 		}
 
 
@@ -353,6 +467,7 @@ int main(int argc, char* argv[])
 		cout << "\tpartition|P \t Partition training and test data\n";
 		cout << "\tunpartition|U \tUnpartitions data from training and test to a general pool\n";
 		cout << "\tnew|N \t Create a new model\n";
+		cout << "\ttrain|T \t Train a model\n";
 		return 1;
 	}
 

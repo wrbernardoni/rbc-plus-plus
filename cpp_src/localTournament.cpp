@@ -27,6 +27,8 @@ using namespace std;
 
 #include <ctime>
 
+#include <filesystem>
+
 class BotConstructor
 {
 public:
@@ -432,6 +434,35 @@ class MinScanConst : public BotConstructor
 	};
 };
 
+#include "utilities/NeuralExpectimax.h"
+class NeuralConst : public BotConstructor
+{
+public:
+	string mP;
+	string id;
+
+	NeuralConst(string s, string i)
+	{
+		mP = s;
+		id = "Neural-";
+		id += i;
+	}
+
+	BotBase* createBot() 
+	{ 
+		WRB_Chess::NeuralModel* mdl = new WRB_Chess::NeuralModel(mP);
+		WRB_Chess::NeuralExpectimax* eng = new WRB_Chess::NeuralExpectimax(mdl, 100000,4);
+		return new WRB_Bot::Inference(eng); 
+	};
+	string getName() { return id; };
+	void destructBot(BotBase* b) 
+	{ 
+		delete ((WRB_Chess::NeuralExpectimax*)(((WRB_Bot::Inference*)b)->engine))->model;
+		delete ((WRB_Bot::Inference*)b)->engine; 
+		delete b; 
+	};
+};
+
 int main(int argc, char* argv[])
 {
 	if (argc < 2)
@@ -465,6 +496,18 @@ int main(int argc, char* argv[])
 	if (argc > 2)
 	{
 		server = argv[2];
+	}
+
+	if (argc > 3)
+	{
+		string modelPath = argv[3];
+		for (auto &p : filesystem::directory_iterator(modelPath))
+	    {
+			if (p.path().extension() == ".model")
+	        {
+	        	bots.push_back(new NeuralConst(p.path().string(), p.path().stem().string()));
+	        }
+	    }
 	}
 
 	httplib::Client cli(server.c_str());

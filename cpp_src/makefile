@@ -1,5 +1,5 @@
 CC = g++
-CFLAGS  = -o3 --std=c++17
+CFLAGS  = -o3 -fopenmp --std=c++17
 
 LDFLAGS=-lssl
 LDFLAGS+=-lcrypto
@@ -20,7 +20,7 @@ endif
 INCLUDES = -I. -Ichess -IreconUtils -Ibots -Iutilities -IEigen
 
 
-all: BuildPath BoardTest BotBattle HTTPTest Connect LocalTournament EndGames Replay TrainModel
+all: BuildPath BoardTest BotBattle HTTPTest Connect LocalTournament EndGames Replay TrainModel Genetic
 
 BuildPath : 
 	mkdir -p build
@@ -43,6 +43,9 @@ EndGames : noMoreGames.cpp
 
 TrainModel : trainModel.cpp ChessUtilities ReconUtilities Utilities
 	$(CC) $(CFLAGS) -o build/train trainModel.cpp build/chess/*.o build/recon/*.o build/utilities/*.o $(INCLUDES) $(LDFLAGS) 
+
+Genetic : geneticPlayground.cpp ChessUtilities ReconUtilities Bots Utilities
+	$(CC) $(CFLAGS) -o build/genetic geneticPlayground.cpp build/chess/*.o build/recon/*.o build/bots/*.o build/utilities/*.o $(INCLUDES) $(LDFLAGS) 
 
 BoardTest : boardTest.o ChessUtilities
 	$(CC) $(CFLAGS) -o build/boardTest build/boardTest.o build/chess/*.o $(INCLUDES) $(LDFLAGS)

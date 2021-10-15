@@ -5,6 +5,11 @@
 #include <iostream>
 #include <cmath>
 
+#include <fstream>
+
+#include "../utilities/json.hpp"
+using json = nlohmann::json;
+
 double sigmoid(double d)
 {
 	return 1.0 / (1.0 + std::exp(-d));
@@ -97,12 +102,12 @@ Eigen::MatrixXd boardToVec(const WRB_Chess::Bitboard& brd, bool toMove)
 	return out;
 }
 
-WRB_Chess::NeuralModel::NeuralModel()
+WRB_Chess::NeuralModel::NeuralModel(int w, int d)
 {
 	// Make everything randomly
 	std::default_random_engine generator;
-	std::poisson_distribution<int> layerWidthDist(64 * 7 + 5);
-	std::poisson_distribution<int> networkDepth(20);
+	std::poisson_distribution<int> layerWidthDist(w);
+	std::poisson_distribution<int> networkDepth(d);
 
 	std::vector<int> modelShape;
 	modelShape.push_back(64 * 7 + 5); // Input layer fixed
@@ -131,6 +136,97 @@ WRB_Chess::NeuralModel::NeuralModel()
 	}
 }
 
+WRB_Chess::NeuralModel::NeuralModel()
+{
+	// Make everything randomly
+	std::default_random_engine generator;
+	std::poisson_distribution<int> layerWidthDist(64 * 6);
+	std::poisson_distribution<int> networkDepth(10);
+
+	std::vector<int> modelShape;
+	modelShape.push_back(64 * 7 + 5); // Input layer fixed
+
+	int depth = networkDepth(generator);
+	if (depth < 3)
+		depth = 3;
+
+	for (int i = 0; i < depth; i++)
+	{
+		int lW = layerWidthDist(generator);
+		if (lW < 1)
+			lW = 1;
+		modelShape.push_back(lW);
+	}
+	modelShape.push_back(1);
+
+	for (int i = 1; i < modelShape.size(); i++)
+	{
+		int prec = modelShape[i - 1];
+		int fol = modelShape[i];
+
+		Eigen::MatrixXd weights = Eigen::MatrixXd::Random(fol, prec + 1);
+		weights = weights/weights.norm();
+		model.push_back(weights);
+	}
+}
+
+WRB_Chess::NeuralModel::NeuralModel(std::string fn)
+{
+	// Load from file
+	json mod;
+	std::ifstream outputFile(fn);
+	outputFile >> mod;
+	outputFile.close();
+
+	int layers = mod["layers"];
+
+	for (int i = 0; i < layers; i++)
+	{
+		int rows = mod["shape"][i]["rows"];
+		int cols = mod["shape"][i]["cols"];
+		model.push_back(Eigen::MatrixXd(rows, cols));
+
+		for (int r = 0; r < rows; r++)
+		{
+			for (int c = 0; c < cols; c++)
+			{
+				model[i](r,c) = mod["weights"][i][r*cols + c];
+			}
+		}
+	}
+}
+
+void WRB_Chess::NeuralModel::save(std::string fn)
+{
+	json mod;
+
+	mod["layers"] = model.size();
+
+	for (int i = 0; i < model.size(); i++)
+	{
+		json lShape;
+		lShape["rows"] = model[i].rows();
+		lShape["cols"] = model[i].cols();
+		mod["shape"].push_back(lShape);
+
+		json weights;
+
+		for (int r = 0; r < model[i].rows(); r++)
+		{
+			for (int c = 0; c < model[i].cols(); c++)
+			{
+				weights.push_back(model[i](r,c));
+			}
+		}
+
+		mod["weights"].push_back(weights);
+	}
+
+	std::ofstream outputFile(fn);
+	outputFile << mod << std::endl;
+	outputFile.close();
+}
+
 double WRB_Chess::NeuralModel::runForward(const WRB_Chess::Bitboard& brd, bool toMove)
 {
 	Eigen::MatrixXd test = boardToVec(brd, toMove);
@@ -142,7 +238,20 @@ double WRB_Chess::NeuralModel::runForward(const WRB_Chess::Bitboard& brd, bool t
 		test = model[i] * test.unaryExpr(&sigmoid);
 	}
 
-	return test(0,0);
+	return test.unaryExpr(&sigmoid)(0,0);
+}
+
+WRB_Chess::NeuralModel& WRB_Chess::NeuralModel::operator=(const WRB_Chess::NeuralModel& rhs)
+{
+	model.clear();
+
+	for (int i = 0; i < rhs.model.size(); i++)
+	{
+		Eigen::MatrixXd cpy = rhs.model[i];
+		model.push_back(cpy);
+	}
+
+	return *this;
 }
 
 #define DROPOUT_RATE 0.7
@@ -158,6 +267,8 @@ double dropout(double w)
 		return 1;
 	}
 }
+
+
 
 double WRB_Chess::NeuralModel::train(const WRB_Chess::Bitboard& brd, bool toMove, double score, double lr)
 {
@@ -177,7 +288,7 @@ double WRB_Chess::NeuralModel::train(const WRB_Chess::Bitboard& brd, bool toMove
 	}
 	inputs.push_back(inp);
 	deltas.push_back(inp);
-	double outErr = score - inp(0,0);
+	double outErr = score - inp.unaryExpr(&sigmoid)(0,0);
 	deltas[deltas.size() - 1] = outErr * inputs[inputs.size() - 2].unaryExpr(&dsigmoid);
 
 	for (int i = deltas.size() - 2; i >= 1; i--)
@@ -229,7 +340,7 @@ double WRB_Chess::NeuralModel::trainBatch(std::vector<WRB_Chess::Bitboard> brd, 
 		}
 		inputs.push_back(inp);
 		deltas.push_back(inp);
-		double outErr = score[b] - inp(0,0);
+		double outErr = score[b] - inp.unaryExpr(&sigmoid)(0,0);
 		sumErr += std::pow(outErr,2);
 		deltas[deltas.size() - 1] = outErr * inputs[inputs.size() - 2].unaryExpr(&dsigmoid);
 

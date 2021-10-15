@@ -64,5 +64,5 @@ double WRB_Chess::PureMonte_Evaluator::EvaluatePosition(const WRB_Chess::Bitboar
 		count += 1.0;
 	}
 
-	return ((long double)(wins - losses))/((long double)(count));
+	return ((double)(wins - losses))/((double)(count));
 }

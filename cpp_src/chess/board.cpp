@@ -1225,6 +1225,12 @@ std::vector<WRB_Chess::Move> WRB_Chess::Bitboard::AvailableMoves(WRB_Chess::Colo
 				if ((potAtt[k] < 0) || (potAtt[k] >= 64) || this->color_masks[c][potAtt[k]])
 					continue;
 
+				if ((abs(potAtt[k]/8 - i/8) != 1) && (abs(potAtt[k]/8 - i/8) != 2))
+					continue;
+
+				if ((abs(potAtt[k]%8 - i%8) != 1) && ((abs(potAtt[k]%8 - i%8) != 2)))
+					continue;
+
 				WRB_Chess::Move knightMove;
 				knightMove.fromSquare = i;
 				knightMove.toSquare = potAtt[k];
