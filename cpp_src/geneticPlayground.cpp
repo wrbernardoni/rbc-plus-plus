@@ -355,6 +355,7 @@ int main(int argc, char* argv[])
 
     	for (int i = 0; i < genes.size(); i++)
     	{
+    		cout << "In " << i+1 << "-st place : " << genes[i]->id << " with " << genes[i]->wins << " wins!" << endl;
     		string fn = modelPath;
 			fn += "/";
 			fn += "GeneticPlayground-r";
