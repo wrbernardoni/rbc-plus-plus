@@ -27,6 +27,9 @@ using json = nlohmann::json;
 
 #include "reconUtils/BotBase.h"
 
+#include <thread>
+#include <future>
+
 struct GameData
 {
 	vector<WRB_Chess::Bitboard> boards; // Boards by half move
@@ -191,8 +194,9 @@ public:
 	};
 };
 
-WRB_Chess::GameHistory PlayGame(int gameN, NeuralConst* whiteBot, NeuralConst* blackBot)
+void PlayGame(bool* end, int gameN, NeuralConst* whiteBot, NeuralConst* blackBot, GameHistory* gH)
 {
+	*end = false;
 	WRB_Chess::LocalGame game(900.0);
 
 	WRB_Chess::BotBase* bots[2];
@@ -290,13 +294,21 @@ WRB_Chess::GameHistory PlayGame(int gameN, NeuralConst* whiteBot, NeuralConst* b
 	cout << gameHead << "Deleting black bot." << endl;
 	blackBot->destructBot(bots[1]);
 
-	return hist;
+	*gH = hist;
+	*end = true;
 }
 
 bool compare (NeuralConst* struct1, NeuralConst* struct2)
 {
     return (struct1->wins > struct2->wins);
 }
+
+struct GameThread
+{
+	thread* t;
+	bool* end;
+	GameHistory* fut;
+};
 
 int main(int argc, char* argv[])
 {
@@ -325,21 +337,85 @@ int main(int argc, char* argv[])
     list<vector<GameData>> tDat;
     int experienceReplay = 5;
     double lr = 0.001;
+    int concurrentGames = 3;
+    unordered_map<int, GameThread> thd;
     while (true)
     {
     	cout << "Starting new round!" << endl << endl;
     	vector<GameData> games;
-    	int gN = 1;
+    	int gN = 0;
     	for (int i = 0; i < genes.size(); i++)
     	{
-    		for (int j = i + 1; j < genes.size(); j++)
+    		for (int j = 0; j < genes.size(); j++)
     		{
-    			gN++;
-    			cout << "Game " << gN << "/" << genes.size() * (genes.size()-1)/2 << endl;
-    			WRB_Chess::GameHistory h = PlayGame(gN, genes[i], genes[j]);
-    			games.push_back(extractGameData(h.j));
+    			if (i == j)
+    				continue;
+
+    			while(thd.size() >= concurrentGames)
+    			{
+    				bool looped = false;
+					while (!looped)
+					{
+						looped = true;
+						for (auto it = thd.begin(); it != thd.end(); it++)
+						{
+							if (*it->second.end)
+							{
+								looped = false;
+								games.push_back(extractGameData(it->second.fut->j));
+								it->second.t->join();
+								delete it->second.end;
+								delete it->second.t;
+								thd.erase(it->first);
+								//cout << "Slot freed" << endl;
+								break;
+							}	
+						}
+					}
+    			}
+
+    			if (thd.size() < concurrentGames)
+    			{
+    				gN++;
+	    			cout << "Starting game " << gN << "/" << genes.size() * (genes.size()-1) << endl;
+
+	    			bool* newTracker = new bool;
+					(*newTracker) = false;
+					thd[gN].end = newTracker;
+					GameHistory* gH = new GameHistory;
+					thd[gN].fut = gH;
+					thd[gN].t = new thread(PlayGame, newTracker, gN, genes[i], genes[j], gH);
+    				break;
+    			}
+    			
+    			std::this_thread::sleep_for(std::chrono::seconds(20));
     		}
     	}
+
+    	while(thd.size() > 0)
+		{
+			bool looped = false;
+			while (!looped)
+			{
+				looped = true;
+				for (auto it = thd.begin(); it != thd.end(); it++)
+				{
+					if (*it->second.end)
+					{
+						looped = false;
+						games.push_back(extractGameData(it->second.fut->j));
+						it->second.t->join();
+						delete it->second.end;
+						delete it->second.t;
+						delete it->second.fut;
+						thd.erase(it->first);
+						//cout << "Slot freed" << endl;
+						break;
+					}	
+				}
+			}
+		}
+
     	tDat.emplace_back(games);
     	if (tDat.size() > experienceReplay)
     		tDat.pop_front();
@@ -355,7 +431,7 @@ int main(int argc, char* argv[])
 
     	for (int i = 0; i < genes.size(); i++)
     	{
-    		cout << "In " << i+1 << "-st place : " << genes[i]->id << " with " << genes[i]->wins << " wins!" << endl;
+    		cout << "In place :" << i+1 << " " << genes[i]->id << " with " << genes[i]->wins << " wins!" << endl;
     		string fn = modelPath;
 			fn += "/";
 			fn += "GeneticPlayground-r";
