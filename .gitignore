@@ -122,3 +122,4 @@ dist
 tournament_server/package-lock.json
 tournament_server/elo.json
 *.json
+*.model
