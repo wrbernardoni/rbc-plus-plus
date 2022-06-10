@@ -147,7 +147,7 @@ app.get('/', function(req, res) {
 	ret += "</table> <br><br>"
 
 	ret += "<div style=\"overflow:auto\">"
-	ret += "<table class=\"center\"> <tr> <th> Bot </th> <th> W-L </th> "
+	ret += "<table class=\"center\"> <tr> <th> Bot </th> <th> W-D-L </th> "
 	for (let i = 0; i < eloArr.length; i++)
 	{
 		ret += "<th>" + eloArr[i][0] + "</th>";
@@ -157,6 +157,7 @@ app.get('/', function(req, res) {
 	{
 		let wT = 0
 		let lT = 0
+		let dT = 0;
 		for (let j = 0; j < eloArr.length; j++)
 		{
 			if (winloss[eloArr[i][0]])
@@ -167,6 +168,7 @@ app.get('/', function(req, res) {
 					let l = winloss[eloArr[i][0]][eloArr[j][0]].losses
 					wT += w;
 					lT += l;
+					dT += winloss[eloArr[i][0]][eloArr[j][0]].draws
 				}
 			}
 		}
@@ -175,13 +177,14 @@ app.get('/', function(req, res) {
 		ret += "<th>" + eloArr[i][0] + "</th>";
 
 		if ((wT != 0) || (lT != 0))
-			ret += `<td>${wT}-${lT} (${Math.round(100.0*wT/(wT + lT))}%)</td>`
+			ret += `<td>${wT}-${dT}-${lT} (${Math.round(100.0*wT/(wT + lT))}%)</td>`
 		else
 			ret += "<th></th>"
 		for (let j = 0; j < eloArr.length; j++)
 		{
 			let w = null;
 			let l = null;
+			let d = null;
 			
 			if (winloss[eloArr[i][0]])
 			{
@@ -189,16 +192,19 @@ app.get('/', function(req, res) {
 				{
 					w = winloss[eloArr[i][0]][eloArr[j][0]].wins
 					l = winloss[eloArr[i][0]][eloArr[j][0]].losses
+					d = winloss[eloArr[i][0]][eloArr[j][0]].draws
 				}
 			}
 
 
-			if (w || l)
+			if (w || l || d)
 			{
 				if (!w)
 					w = 0;
 				if (!l)
 					l = 0;
+				if (!d)
+					d = 0;
 
 				if ((w != 0) || (l != 0))
 				{
@@ -226,7 +232,7 @@ app.get('/', function(req, res) {
 				else
 					ret += "<td style=\"text-align: center\">"
 
-				ret += `${ w }-${ l }`
+				ret += `${ w }-${d}-${ l }`
 			}
 			else
 			{
@@ -279,7 +285,8 @@ app.post("/", function(req, res)
 		{
 			winloss[winner][loser] = {
 				wins : 0,
-				losses : 0
+				losses : 0,
+				draws : 0
 			}
 		}
 
@@ -287,7 +294,8 @@ app.post("/", function(req, res)
 		{
 			winloss[loser][winner] = {
 				wins : 0,
-				losses : 0
+				losses : 0,
+				draws : 0
 			}
 		}
 
@@ -353,7 +361,31 @@ app.post("/", function(req, res)
 			    }
 			})
 		}
-	}	
+	}
+	else
+	{
+		if (!winloss[bot1][bot2])
+		{
+			winloss[bot1][bot2] = {
+				wins : 0,
+				losses : 0,
+				draws : 0
+			}
+		}
+
+		if (!winloss[bot2][bot1])
+		{
+			winloss[bot2][bot1] = {
+				wins : 0,
+				losses : 0,
+				draws : 0
+			}
+		}
+
+		winloss[bot1][bot2].draws += 1;
+		winloss[bot2][bot1].draws += 1;
+		console.log(`W:${bot1}(${bot1Elo1}->${bot1Elo2}) vs B:${bot2}(${bot2Elo1}->${bot2Elo2}), DRAW`);
+	}
 
 	fs.writeFileSync('./elo.json', JSON.stringify(elo));
 	fs.writeFileSync('./winloss.json', JSON.stringify(winloss));

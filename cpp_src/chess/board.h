@@ -96,6 +96,7 @@ namespace WRB_Chess
 			short epDefender; // Square that the pawn vulnerable to en-passant is on
 			bool queensideCastle[2];
 			bool kingsideCastle[2];
+			int halfmove_clock;
 
 			Move RectifySlide(Move m, bool canCapture) const;
 		public:
@@ -111,6 +112,7 @@ namespace WRB_Chess
 			inline bool operator!=(const Bitboard& rhs) const { return !(*this == rhs); }
 			void clear();
 
+			inline int getHalfmoveClock() const { return halfmove_clock; };
 			inline short getEP() const { return epSquare; };
 			inline bool queenCastle(bool b) const { return queensideCastle[b];};
 			inline bool kingCastle(bool b) const { return kingsideCastle[b];};

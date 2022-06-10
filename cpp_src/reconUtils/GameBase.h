@@ -6,6 +6,10 @@
 #include <vector>
 #include <tuple>
 
+#define SECONDS_INCREMENT 5
+#define REVERSIBLE_MOVE_LIMIT 100
+
+
 namespace WRB_Chess
 {
 	class GameBase

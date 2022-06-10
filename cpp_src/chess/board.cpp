@@ -241,6 +241,7 @@ WRB_Chess::Bitboard::Bitboard()
 	this->kingsideCastle[WRB_Chess::Color::Black] = true;
 	this->epSquare = -1;
 	this->epDefender = -1;
+	this->halfmove_clock = 0;
 }
 
 void WRB_Chess::Bitboard::clear()
@@ -259,6 +260,7 @@ void WRB_Chess::Bitboard::clear()
 	this->kingsideCastle[WRB_Chess::Color::Black] = false;
 	this->epSquare = -1;
 	this->epDefender = -1;
+	this->halfmove_clock = 0;
 }
 
 WRB_Chess::Bitboard::Bitboard(const Bitboard &bb)
@@ -277,6 +279,7 @@ WRB_Chess::Bitboard::Bitboard(const Bitboard &bb)
 	this->kingsideCastle[WRB_Chess::Color::Black] = bb.kingsideCastle[WRB_Chess::Color::Black];
 	this->epSquare = bb.epSquare;
 	this->epDefender = bb.epDefender;
+	this->halfmove_clock = bb.halfmove_clock;
 }
 
 WRB_Chess::Bitboard::Bitboard(std::vector<std::pair<short, WRB_Chess::ColorPiece>> mask)
@@ -295,6 +298,7 @@ WRB_Chess::Bitboard::Bitboard(std::vector<std::pair<short, WRB_Chess::ColorPiece
 	this->kingsideCastle[WRB_Chess::Color::Black] = false;
 	this->epSquare = -1;
 	this->epDefender = -1;
+	this->halfmove_clock = 0;
 
 	for (int i = 0; i < mask.size(); i++)
 	{
@@ -322,6 +326,7 @@ WRB_Chess::Bitboard& WRB_Chess::Bitboard::operator=(const Bitboard& bb)
 	this->kingsideCastle[WRB_Chess::Color::Black] = bb.kingsideCastle[WRB_Chess::Color::Black];
 	this->epSquare = bb.epSquare;
 	this->epDefender = bb.epDefender;
+	this->halfmove_clock = bb.halfmove_clock;
 
 	return *this;
 }
@@ -344,6 +349,7 @@ WRB_Chess::Bitboard::Bitboard(std::string fen)
 	this->kingsideCastle[WRB_Chess::Color::Black] = false;
 	this->epSquare = -1;
 	this->epDefender = -1;
+	this->halfmove_clock = 0;
 
 	int component = 0;
 	int rank = 7;
@@ -1449,6 +1455,7 @@ WRB_Chess::Move WRB_Chess::Bitboard::ApplyMove(WRB_Chess::Move m, bool& capture,
 	if (taken.fromSquare == -1 || taken.toSquare == -1 || taken.fromSquare == taken.toSquare)
 	{	
 		// Null move
+		this->halfmove_clock++;
 		return WRB_Chess::Move();
 	}
 
@@ -1466,6 +1473,8 @@ WRB_Chess::Move WRB_Chess::Bitboard::ApplyMove(WRB_Chess::Move m, bool& capture,
 			this->piece_masks[i][taken.toSquare] = false;
 		}
 	}
+
+	bool pawnMove = false;
 
 	for (int i = 0; i < 6; i++)
 	{
@@ -1548,6 +1557,7 @@ WRB_Chess::Move WRB_Chess::Bitboard::ApplyMove(WRB_Chess::Move m, bool& capture,
 			}
 			else if (i == WRB_Chess::Piece::Pawn)
 			{
+				pawnMove = true;
 				if (taken.toSquare == this->epSquare)
 				{	// This is an en-passant
 					if (this->color_masks[0][taken.fromSquare])
@@ -1620,6 +1630,11 @@ WRB_Chess::Move WRB_Chess::Bitboard::ApplyMove(WRB_Chess::Move m, bool& capture,
 	{
 		this->epSquare = -1;
 		this->epDefender = -1;
+	}
+
+	if (!pawnMove && !capture)
+	{
+		this->halfmove_clock++;
 	}
 
 	return taken;

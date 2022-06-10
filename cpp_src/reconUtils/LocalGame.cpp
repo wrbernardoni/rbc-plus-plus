@@ -72,11 +72,13 @@ void WRB_Chess::LocalGame::end_turn()
 	{
 		currentTurn = WRB_Chess::Color::Black;
 		this->whiteSeconds -= ((std::chrono::duration<double>)(std::chrono::steady_clock::now() - turnStart)).count();
+		this->whiteSeconds += SECONDS_INCREMENT;
 	}
 	else
 	{
 		currentTurn = WRB_Chess::Color::White;
 		this->blackSeconds -= ((std::chrono::duration<double>)(std::chrono::steady_clock::now() - turnStart)).count();
+		this->blackSeconds += SECONDS_INCREMENT;
 	}
 
 	turnStart = std::chrono::steady_clock::now();
@@ -87,6 +89,8 @@ bool WRB_Chess::LocalGame::is_over()
 	if ((this->whiteSeconds <= 0) || (this->blackSeconds <= 0))
 		return true;
 	if ((this->board.Pieces(WRB_Chess::Color::White, WRB_Chess::Piece::King) == 0) || (this->board.Pieces(WRB_Chess::Color::Black, WRB_Chess::Piece::King) == 0))
+		return true;
+	if (this->board.getHalfmoveClock() >= REVERSIBLE_MOVE_LIMIT)
 		return true;
 
 	return false;
