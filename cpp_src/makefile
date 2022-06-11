@@ -20,7 +20,7 @@ endif
 INCLUDES = -I. -Ichess -IreconUtils -Ibots -Iutilities -IEigen
 
 
-all: BuildPath BoardTest BotBattle HTTPTest Connect LocalTournament EndGames Replay TrainModel Genetic
+all: BuildPath BoardTest BotBattle HTTPTest Connect LocalTournament EndGames Replay TrainModel Genetic EngineTest
 
 BuildPath : 
 	mkdir -p build
@@ -50,6 +50,9 @@ Genetic : geneticPlayground.cpp ChessUtilities ReconUtilities Bots Utilities
 BoardTest : boardTest.o ChessUtilities
 	$(CC) $(CFLAGS) -o build/boardTest build/boardTest.o build/chess/*.o $(INCLUDES) $(LDFLAGS)
 
+EngineTest : engineTest.o ChessUtilities
+	$(CC) $(CFLAGS) -o build/engineTest build/engineTest.o build/chess/*.o build/utilities/*.o  $(INCLUDES) $(LDFLAGS)	
+
 Replay : replayGame.o ChessUtilities
 	$(CC) $(CFLAGS) -o build/replay build/replayGame.o build/chess/*.o $(INCLUDES) $(LDFLAGS)
 
@@ -77,7 +80,7 @@ ReconUtilities : BuildPath build/recon/LocalGame.o build/recon/RemoteGame.o
 build/recon/%.o : reconUtils/%.cpp BuildPath
 	$(CC) $(CFLAGS) -o $@ -c $< $(INCLUDES) $(LDFLAGS)
 
-Utilities : BuildPath build/utilities/BoardManager.o build/utilities/EngineBase.o build/utilities/RandomEngine.o build/utilities/MinBoardsScanEngine.o build/utilities/PureMonteEvaluator.o build/utilities/UniformExpectimaxEngine.o build/utilities/ExpectimaxEngine.o build/utilities/ExpectimaxEngineMT.o build/utilities/NeuralModel.o
+Utilities : BuildPath build/utilities/BoardManager.o build/utilities/EngineBase.o build/utilities/RandomEngine.o build/utilities/MinBoardsScanEngine.o build/utilities/PureMonteEvaluator.o build/utilities/UniformExpectimaxEngine.o build/utilities/ExpectimaxEngine.o build/utilities/ExpectimaxEngineMT.o build/utilities/NeuralModel.o build/utilities/UCIInterface.o build/utilities/StockyExpectimax.o
 #	$(CC) $(CFLAGS) $(INCLUDES) -o build/Utilities.o -c utilities/*.cpp
 
 build/utilities/%.o : utilities/%.cpp BuildPath
@@ -85,6 +88,9 @@ build/utilities/%.o : utilities/%.cpp BuildPath
 
 boardTest.o: boardTest.cpp ChessUtilities
 	$(CC) $(CFLAGS) -o build/boardTest.o -c boardTest.cpp $(INCLUDES) $(LDFLAGS)
+
+engineTest.o: engineTest.cpp ChessUtilities build/utilities/UCIInterface.o
+	$(CC) $(CFLAGS) -o build/engineTest.o -c engineTest.cpp $(INCLUDES) $(LDFLAGS)
 
 replayGame.o: replayGame.cpp ChessUtilities
 	$(CC) $(CFLAGS) -o build/replayGame.o -c replayGame.cpp $(INCLUDES) $(LDFLAGS)

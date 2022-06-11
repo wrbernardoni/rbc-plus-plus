@@ -242,6 +242,7 @@ WRB_Chess::Bitboard::Bitboard()
 	this->epSquare = -1;
 	this->epDefender = -1;
 	this->halfmove_clock = 0;
+	this->fullmove = 2;
 }
 
 void WRB_Chess::Bitboard::clear()
@@ -261,6 +262,7 @@ void WRB_Chess::Bitboard::clear()
 	this->epSquare = -1;
 	this->epDefender = -1;
 	this->halfmove_clock = 0;
+	this->fullmove = 2;
 }
 
 WRB_Chess::Bitboard::Bitboard(const Bitboard &bb)
@@ -280,6 +282,7 @@ WRB_Chess::Bitboard::Bitboard(const Bitboard &bb)
 	this->epSquare = bb.epSquare;
 	this->epDefender = bb.epDefender;
 	this->halfmove_clock = bb.halfmove_clock;
+	this->fullmove = bb.fullmove;
 }
 
 WRB_Chess::Bitboard::Bitboard(std::vector<std::pair<short, WRB_Chess::ColorPiece>> mask)
@@ -299,6 +302,7 @@ WRB_Chess::Bitboard::Bitboard(std::vector<std::pair<short, WRB_Chess::ColorPiece
 	this->epSquare = -1;
 	this->epDefender = -1;
 	this->halfmove_clock = 0;
+	this->fullmove = 2;
 
 	for (int i = 0; i < mask.size(); i++)
 	{
@@ -327,6 +331,7 @@ WRB_Chess::Bitboard& WRB_Chess::Bitboard::operator=(const Bitboard& bb)
 	this->epSquare = bb.epSquare;
 	this->epDefender = bb.epDefender;
 	this->halfmove_clock = bb.halfmove_clock;
+	this->fullmove = bb.fullmove;
 
 	return *this;
 }
@@ -350,12 +355,18 @@ WRB_Chess::Bitboard::Bitboard(std::string fen)
 	this->epSquare = -1;
 	this->epDefender = -1;
 	this->halfmove_clock = 0;
+	this->fullmove = 2;
 
 	int component = 0;
 	int rank = 7;
 	int file = 0;
 
 	int tempInt;
+
+	std::string halfBuilder = "";
+	std::string fullBuilder = "";
+	bool blackMove = false;
+
 	for (int i = 0; i < fen.size(); i++)
 	{
 		switch(component)
@@ -504,11 +515,15 @@ WRB_Chess::Bitboard::Bitboard(std::string fen)
 		break;
 
 		case 1: // To move, ignore
+			if (fen[i] == 'b' || fen[i] == 'B')
+			{
+				blackMove = true;
+			}
 			i++;
 			component++;
 		break;
 
-		case 3: // Castling info
+		case 2: // Castling info
 			switch(fen[i])
 			{
 				case 'K':
@@ -533,8 +548,8 @@ WRB_Chess::Bitboard::Bitboard(std::string fen)
 			}
 		break;
 
-		case 4: // En passant info
-			if (fen[i] != '-')
+		case 3: // En passant info
+			if (fen[i] != '-' && fen[i] != ' ')
 			{
 				tempInt = 0;
 
@@ -574,6 +589,7 @@ WRB_Chess::Bitboard::Bitboard(std::string fen)
 				}
 
 				tempInt += (int)(fen[i+1] - '0') * 8;
+				i++;
 
 				this->epSquare = tempInt;
 
@@ -582,13 +598,46 @@ WRB_Chess::Bitboard::Bitboard(std::string fen)
 				else
 					this->epDefender = tempInt - 8;
 			}
+			else if (fen[i] == ' ')
+				component++;
 		break;
 
-		default: // End
-			return;
+		case 4: // Halfmove clock
+			if (fen[i] != ' ')
+			{
+				halfBuilder += fen[i];
+			}
+			else
+			{
+				component++;
+			}
+		break;
 
+		case 5: // Fullmove clock
+			if (fen[i] != ' ')
+			{
+				fullBuilder += fen[i];
+			}
+			else
+			{
+				component++;
+			}
+		break;
+
+		//default: // End
+			
 		}
 		
+	}
+
+	if (halfBuilder != "")
+	{
+		this->halfmove_clock = stoi(halfBuilder);
+	}
+
+	if (fullBuilder != "")
+	{
+		this->fullmove = stoi(fullBuilder) * 2 + blackMove;
 	}
 }
 
@@ -664,7 +713,10 @@ std::string WRB_Chess::Bitboard::fen()
 		}
 	}
 
-	fen += " - ";
+	if ((fullmove % 2) == 0)
+		fen += " w ";
+	else
+		fen += " b ";
 
 	if (kingsideCastle[0])
 	{
@@ -702,7 +754,10 @@ std::string WRB_Chess::Bitboard::fen()
 		fen += "-";
 	}
 
-	fen += " 0 0";
+	fen += " ";
+	fen += std::to_string(this->halfmove_clock);
+	fen += " ";
+	fen += std::to_string(this->fullmove/2);
 
 	return fen;
 }
@@ -722,7 +777,9 @@ bool WRB_Chess::Bitboard::operator==(const Bitboard& rhs) const
 		&& (this->kingsideCastle[WRB_Chess::Color::White] == rhs.kingsideCastle[WRB_Chess::Color::White])
 		&& (this->kingsideCastle[WRB_Chess::Color::Black] == rhs.kingsideCastle[WRB_Chess::Color::Black])
 		&& (this->epSquare == rhs.epSquare)
-		&& (this->epDefender == rhs.epDefender);
+		&& (this->epDefender == rhs.epDefender)
+		&& (this->halfmove_clock == rhs.halfmove_clock);
+		//&& (this->fullmove == rhs.fullmove);
 }
 
 WRB_Chess::ColorPiece WRB_Chess::Bitboard::PieceAt(short square) const
@@ -805,8 +862,35 @@ WRB_Chess::Bitboard WRB_Chess::Bitboard::senseMask(short square) const
 	return masked;
 }
 
+#include <iostream>
+
+bool WRB_Chess::Bitboard::Check(Color c)
+{
+	std::bitset<64> kingMask = Pieces(c, Piece::King);
+	if (kingMask == 0)
+	{
+		return true;
+	}
+
+	short kingLoc = MaskToSquares(kingMask)[0];
+
+	std::vector<WRB_Chess::Move> att = Attacks(OPPOSITE_COLOR(c), kingLoc);
+
+	return (att.size() != 0);
+}
+
 std::vector<WRB_Chess::Move> WRB_Chess::Bitboard::Attacks(Color c, short t)
 {
+	std::vector<WRB_Chess::Move> mvs = AvailableMoves(c);
+	std::vector<WRB_Chess::Move> att;
+	for (int i = 0; i < mvs.size(); i++)
+	{
+		RectifyMove(mvs[i]);
+		if (mvs[i].toSquare == t)
+			att.push_back(mvs[i]);
+	}
+	return att;
+	/*
 	std::vector<WRB_Chess::Move> mvs;
 
 	std::bitset<64> allPieces = this->color_masks[0] | this->color_masks[1];
@@ -911,7 +995,7 @@ std::vector<WRB_Chess::Move> WRB_Chess::Bitboard::Attacks(Color c, short t)
 				break;
 			}
 			scan = scan + stepLeft + 8 * stepUp;
-			if (this->color_masks[c][scan] && (this->piece_masks[WRB_Chess::Piece::Queen] | this->piece_masks[WRB_Chess::Piece::Rook])[scan])
+			if (this->color_masks[c][scan] && (this->piece_masks[WRB_Chess::Piece::Queen][scan] || this->piece_masks[WRB_Chess::Piece::Rook][scan]))
 			{
 				WRB_Chess::Move slideAttack;
 				slideAttack.fromSquare = scan;
@@ -944,7 +1028,7 @@ std::vector<WRB_Chess::Move> WRB_Chess::Bitboard::Attacks(Color c, short t)
 				break;
 			}
 			scan = scan + stepLeft + 8 * stepUp;
-			if (this->color_masks[c][scan] && (this->piece_masks[WRB_Chess::Piece::Queen] | this->piece_masks[WRB_Chess::Piece::Bishop])[scan])
+			if (this->color_masks[c][scan] && (this->piece_masks[WRB_Chess::Piece::Queen][scan] | this->piece_masks[WRB_Chess::Piece::Bishop][scan]))
 			{
 				WRB_Chess::Move slideAttack;
 				slideAttack.fromSquare = scan;
@@ -960,6 +1044,7 @@ std::vector<WRB_Chess::Move> WRB_Chess::Bitboard::Attacks(Color c, short t)
 	} while ((stepLeft != 1) && (stepUp != 1));
 
 	return mvs;
+	*/
 }
 
 std::vector<WRB_Chess::Move> WRB_Chess::Bitboard::AvailableMoves(WRB_Chess::Color c) const
@@ -1456,6 +1541,7 @@ WRB_Chess::Move WRB_Chess::Bitboard::ApplyMove(WRB_Chess::Move m, bool& capture,
 	{	
 		// Null move
 		this->halfmove_clock++;
+		this->fullmove++;
 		return WRB_Chess::Move();
 	}
 
@@ -1636,6 +1722,12 @@ WRB_Chess::Move WRB_Chess::Bitboard::ApplyMove(WRB_Chess::Move m, bool& capture,
 	{
 		this->halfmove_clock++;
 	}
+	else
+	{
+		this->halfmove_clock = 0;
+	}
+
+	this->fullmove++;
 
 	return taken;
 }

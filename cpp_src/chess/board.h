@@ -97,6 +97,7 @@ namespace WRB_Chess
 			bool queensideCastle[2];
 			bool kingsideCastle[2];
 			int halfmove_clock;
+			int fullmove;
 
 			Move RectifySlide(Move m, bool canCapture) const;
 		public:
@@ -112,7 +113,10 @@ namespace WRB_Chess
 			inline bool operator!=(const Bitboard& rhs) const { return !(*this == rhs); }
 			void clear();
 
+			inline Color toMove() const { return (fullmove % 2 == 0) ? Color::White : Color::Black; }
+			inline void setToMove(Color c) { if ((c == Color::White && (fullmove%2 == 1)) || (c == Color::Black && (fullmove & 2 == 0))) { fullmove++; } }
 			inline int getHalfmoveClock() const { return halfmove_clock; };
+			inline int getFullmoveClock() const { return fullmove; };
 			inline short getEP() const { return epSquare; };
 			inline bool queenCastle(bool b) const { return queensideCastle[b];};
 			inline bool kingCastle(bool b) const { return kingsideCastle[b];};
@@ -128,6 +132,8 @@ namespace WRB_Chess
 			inline std::bitset<64> Kings() const { return piece_masks[Piece::King]; };
 
 			inline bool KingsAlive() const { return ((piece_masks[Piece::King] & color_masks[Color::White]) != 0) && ((piece_masks[Piece::King] & color_masks[Color::Black]) != 0); };
+
+			bool Check(Color c);
 
 			ColorPiece PieceAt(short square) const;
 			std::vector<std::pair<short, WRB_Chess::ColorPiece>> sense(short square) const;

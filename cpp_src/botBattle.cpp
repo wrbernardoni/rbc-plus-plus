@@ -5,7 +5,7 @@
 #include "utilities/MinBoardsScanEngine.h"
 #include "utilities/ExpectimaxEngine.h"
 #include "utilities/MonteShannon2Expectimax.h"
-#include "utilities/AlphaBetaExpectimax.h"
+#include "utilities/StockyExpectimax.h"
 
 #include <iostream>
 
@@ -16,10 +16,10 @@ int main()
 	WRB_Chess::BoardHash::Init();
 
 	WRB_Chess::LocalGame game(900.0);//(90000000000.0);
-	// WRB_Chess::AlphaBetaExpectimax wEngine(5, 2, 2, 10000000, 6);
-	// WRB_Chess::AlphaBetaExpectimax bEngine(5, 2, 2, 10000000, 6);
-	WRB_Chess::MonteShannon2Expectimax wEngine(10,10, 100000, 4);
-	WRB_Chess::MonteShannon2Expectimax bEngine(10,10, 100000, 4);
+	WRB_Chess::StockyExpectimax wEngine(5, 10000000, 8, "../../Stockfish/src/stockfish.exe");
+	WRB_Chess::StockyExpectimax bEngine(5, 10000000, 8, "../../Stockfish/src/stockfish.exe" );
+	// WRB_Chess::MonteShannon2Expectimax wEngine(10,10, 100000, 4);
+	// WRB_Chess::MonteShannon2Expectimax bEngine(10,10, 100000, 4);
 	WRB_Bot::Inference whiteBot(&wEngine);
 	WRB_Bot::Inference blackBot(&bEngine);
 

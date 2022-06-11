@@ -70,6 +70,7 @@ void PlayGame(httplib::Client* cli, int gameN, BotConstructor* whiteBot, BotCons
 			cout << gameHead <<  turnCount << " " << (activeTurn == 0? "White: " + whiteBName : "Black: "  + blackBName) << " turn starts: " << game.get_seconds_left() << " seconds remaining." << endl;
 			cout << gameHead << "Board State" << endl;
 			cout << WRB_Chess::GetPrintable(game.getBoard());
+			cout << "fen: " << game.getBoard().fen() << endl;
 			auto senseActions = game.sense_actions();
 			auto moveActions = game.move_actions();
 	
@@ -143,18 +144,18 @@ void PlayGame(httplib::Client* cli, int gameN, BotConstructor* whiteBot, BotCons
 		fName += blackBName;
 		fName += ".json";
 
-		std::fstream outputFile(fName.c_str(), fstream::out);
-		if (!outputFile.is_open())
-		{
-			cout << "Error opening file!\n!!!\n\n";
-		}
-		else
-		{
-			cout << "Outputting game history to file " << fName << endl;
-			outputFile << hist.j.dump() << std::endl;
-			outputFile.flush();
-			outputFile.close();
-		}		
+		// std::fstream outputFile(fName.c_str(), fstream::out);
+		// if (!outputFile.is_open())
+		// {
+		// 	cout << "Error opening file!\n!!!\n\n";
+		// }
+		// else
+		// {
+		// 	cout << "Outputting game history to file " << fName << endl;
+		// 	outputFile << hist.j.dump() << std::endl;
+		// 	outputFile.flush();
+		// 	outputFile.close();
+		// }		
 	
 		bots[0]->handle_game_end(game.get_winner_color(), hist);
 		bots[1]->handle_game_end(game.get_winner_color(), hist);
@@ -434,6 +435,39 @@ class MinScanConst : public BotConstructor
 	};
 };
 
+#include "utilities/AlphaBetaExpectimax.h"
+class AlphaBetaConst : public BotConstructor
+{
+	BotBase* createBot() 
+	{ 
+		WRB_Chess::AlphaBetaExpectimax* eng = new WRB_Chess::AlphaBetaExpectimax(5, 2, 1, 10000000, 6);
+		return new WRB_Bot::Inference(eng); 
+	};
+	string getName() { return "AlphaBetaExpectimax"; };
+	void destructBot(BotBase* b) 
+	{ 
+		delete ((WRB_Bot::Inference*)b)->engine; 
+		delete b; 
+	};
+};
+
+#include "utilities/StockyExpectimax.h"
+class StockyConst : public BotConstructor
+{
+	BotBase* createBot() 
+	{ 
+		WRB_Chess::StockyExpectimax* eng = new WRB_Chess::StockyExpectimax(5, 10000000, 8, "../../Stockfish/src/stockfish.exe");
+		return new WRB_Bot::Inference(eng); 
+	};
+	string getName() { return "StockyExpectimax"; };
+	void destructBot(BotBase* b) 
+	{ 
+		delete ((WRB_Bot::Inference*)b)->engine; 
+		delete b; 
+	};
+};
+
+
 #include "utilities/NeuralExpectimax.h"
 class NeuralConst : public BotConstructor
 {
@@ -487,6 +521,8 @@ int main(int argc, char* argv[])
 	bots.push_back(new MonteShannon2ExpectimaxMPOldConst());
 	bots.push_back(new Shannon2ExpectimaxConst());
 	bots.push_back(new Shannon2ExpectimaxMPOldConst());
+	// bots.push_back(new AlphaBetaConst());
+	bots.push_back(new StockyConst());
 
 	WRB_Chess::BoardHash::Init();
 	// TODO Make these cmd line args

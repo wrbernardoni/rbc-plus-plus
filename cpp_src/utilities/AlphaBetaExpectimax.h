@@ -84,9 +84,7 @@ namespace WRB_Chess
 					if (tB.Pieces(c, WRB_Chess::Piece::King) != 0)
 					{
 						bool good = true;
-						short kingSq = (*WRB_Chess::MaskToSquares(tB.Pieces(c, WRB_Chess::Piece::King)).begin());
-						auto aM = tB.Attacks(OPPOSITE_COLOR(c), kingSq);
-						if (aM.size() == 0)
+						if (!tB.Check(c))
 						{
 							tM1++;
 						}
@@ -108,9 +106,7 @@ namespace WRB_Chess
 					tB.ApplyMove(taken);
 					if (tB.Pieces(OPPOSITE_COLOR(c), WRB_Chess::Piece::King) != 0)
 					{
-						short kingSq = (*WRB_Chess::MaskToSquares(tB.Pieces(OPPOSITE_COLOR(c), WRB_Chess::Piece::King)).begin());
-						auto aM = tB.Attacks(c, kingSq);
-						if (aM.size() == 0)
+						if (!tB.Check(OPPOSITE_COLOR(c)))
 						{
 							tM2++;
 						}
@@ -142,6 +138,10 @@ namespace WRB_Chess
 				{
 					return 1000;
 				}
+			}
+			else if (b.getHalfmoveClock() >= 100)
+			{
+				return 0;
 			}
 			else if (d <= 0)
 			{

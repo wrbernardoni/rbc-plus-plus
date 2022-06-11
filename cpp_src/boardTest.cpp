@@ -119,7 +119,7 @@ int main()
 			break;
 		}
 
-		cout << "Rolling map size: " << rMap.size() << endl;
+		// cout << "Rolling map size: " << rMap.size() << endl;
 	}
 
 	cout << "After " << it << " iterations:" << endl;
